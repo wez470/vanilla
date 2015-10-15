@@ -36,13 +36,7 @@ public class PermissionRequestActivity extends Activity {
 	@TargetApi(Build.VERSION_CODES.M)
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		ThemeHelper.setTheme(this, R.style.VanillaBase);
 		super.onCreate(savedInstanceState);
-
-		setTitle(R.string.app_name);
-		//	Fixme: This should probably be some welcome dialog with a button to launch askForPermissions
-		//	setContentView(R.layout.showqueue_listview);
-
 		requestPermissions(NEEDED_PERMISSIONS, 0);
 	}
 
@@ -98,7 +92,7 @@ public class PermissionRequestActivity extends Activity {
 	 * @param context The context to use
 	 * @return boolean true if all permissions have been granded
 	 */
-	private static boolean havePermissions(Context context) {
+	public static boolean havePermissions(Context context) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			for (String permission : NEEDED_PERMISSIONS) {
 				if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
