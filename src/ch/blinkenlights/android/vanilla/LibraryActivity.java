@@ -535,7 +535,7 @@ public class LibraryActivity
 		if (view == mCover || view == mActionControls) {
 			openPlaybackActivity();
 		} else if (view == mPermissionRequest) {
-			PermissionRequestActivity.requestPermissions(this);
+			PermissionRequestActivity.requestPermissions(this, getIntent());
 		} else if (view == mEmptyQueue) {
 			setState(PlaybackService.get(this).setFinishAction(SongTimeline.FINISH_RANDOM));
 		} else if (view.getTag() != null) {

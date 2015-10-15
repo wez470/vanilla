@@ -44,6 +44,11 @@ public class AudioPickerActivity extends PlaybackActivity {
 			return;
 		}
 
+		if (PermissionRequestActivity.requestPermissions(this, intent)) {
+			finish();
+			return;
+		}
+
 		Uri uri = intent.getData();
 		if (uri == null) {
 			finish();
