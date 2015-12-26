@@ -27,8 +27,6 @@ THE SOFTWARE.
 	android:orientation="horizontal">
 	<ch.blinkenlights.android.vanilla.LazyCoverView
 		android:id="@+id/cover"
-		android:background="?android:attr/selectableItemBackground"
-		android:longClickable="true"
 		android:scaleType="centerCrop"
 		android:layout_width="@dimen/cover_size"
 		android:layout_height="@dimen/cover_size"
@@ -39,8 +37,6 @@ THE SOFTWARE.
 	/>
 	<TextView
 		android:id="@+id/text"
-		android:longClickable="true"
-		android:background="?android:attr/selectableItemBackground"
 		android:maxLines="2"
 		android:padding="@dimen/text_padding"
 		android:textColor="?android:textColorPrimary"
@@ -59,7 +55,6 @@ THE SOFTWARE.
 	<ImageView
 		android:id="@+id/arrow"
 		android:background="?android:attr/selectableItemBackground"
-		android:longClickable="true"
 		android:src="@drawable/arrow"
 		android:scaleType="center"
 		android:layout_width="@dimen/cover_size"
