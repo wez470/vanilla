@@ -25,7 +25,7 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 		<item name="overlay_background_color">@color/overlay_background_light</item>
 		<item name="overlay_foreground_color">@color/overlay_foreground_light</item>
 		<item name="divider_color">@color/button_material_light</item>
-		<item name="float_color">@color/button_material_light</item>
+		<item name="float_color">@color/material_grey_400</item>
 		<item name="android:colorAccent">@color/vanillaAccent</item>
 		<item name="android:colorPrimary">@color/vanillaPrimary</item>
 		<item name="android:colorPrimaryDark">@color/vanillaPrimaryDark</item>
@@ -41,6 +41,7 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 
 	<style name="Library" parent="VanillaBase">
 		<item name="android:actionBarStyle">@style/Universal.LibraryActionBar</item>
+		<item name="android:actionBarTabStyle">@style/Universal.LibraryActionBarTabView</item>
 		<item name="android:actionBarTabTextStyle">@style/Universal.LibraryActionBarTabText</item>
 	</style>
 
@@ -62,6 +63,9 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 		<item name="android:textColor">@color/material_grey_300</item>
 	</style>
 
+	<style name="Universal.LibraryActionBarTabView" parent="android:Widget.Material.ActionBar.TabView">
+		<item name="android:background">@drawable/tab_indicator</item>
+	</style>
 
 
 	<!-- dark theme -->
@@ -85,6 +89,7 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 
 	<style name="Dark.Library" parent="Dark.VanillaBase">
 		<item name="android:actionBarStyle">@style/Universal.LibraryActionBar</item>
+		<item name="android:actionBarTabStyle">@style/Universal.LibraryActionBarTabView</item>
 		<item name="android:actionBarTabTextStyle">@style/Universal.LibraryActionBarTabText</item>
 	</style>
 
