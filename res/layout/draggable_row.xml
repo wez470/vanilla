@@ -23,7 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 	>
 
 	<LinearLayout
-		android:background="?android:attr/selectableItemBackground"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:orientation="horizontal">
@@ -46,7 +45,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 			android:layout_marginBottom="@dimen/cover_padding" />
 
 		<TextView android:id="@+id/text"
-			android:background="?android:attr/selectableItemBackground"
 			android:maxLines="2"
 			android:padding="@dimen/text_padding"
 			android:textColor="?android:textColorPrimary"
