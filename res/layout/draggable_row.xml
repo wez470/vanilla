@@ -40,7 +40,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 			android:layout_width="@dimen/cover_size"
 			android:layout_height="@dimen/cover_size"
 			android:layout_marginLeft="@dimen/cover_padding"
-			android:layout_marginRight="@dimen/cover_padding"
 			android:layout_gravity="center_vertical"
 			android:visibility="gone" />
 		<TextView
