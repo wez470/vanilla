@@ -36,21 +36,21 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 		<ch.blinkenlights.android.vanilla.LazyCoverView
 			android:id="@+id/cover"
-			android:visibility="gone"
-			android:longClickable="true"
+			android:scaleType="centerCrop"
 			android:layout_width="@dimen/cover_size"
 			android:layout_height="@dimen/cover_size"
 			android:layout_marginLeft="@dimen/cover_padding"
-			android:layout_marginTop="@dimen/cover_padding"
-			android:layout_marginBottom="@dimen/cover_padding" />
-
-		<TextView android:id="@+id/text"
+			android:layout_marginRight="@dimen/cover_padding"
+			android:layout_gravity="center_vertical"
+			android:visibility="gone" />
+		<TextView
+			android:id="@+id/text"
 			android:maxLines="2"
-			android:padding="@dimen/text_padding"
 			android:textColor="?android:textColorPrimary"
 			android:gravity="left|center_vertical"
 			android:layout_width="0px"
 			android:layout_height="@dimen/row_normal_height"
+			android:layout_marginLeft="@dimen/text_padding"
 			android:layout_weight="1" />
 
 		<CheckedTextView
@@ -66,14 +66,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 			android:visibility="gone"
 			android:src="@drawable/grabber"
 			android:scaleType="center"
-			android:layout_width="@dimen/cover_size"
-			android:layout_height="@dimen/cover_size"
-			android:layout_margin="@dimen/cover_padding"/>
+			android:layout_width="@dimen/row_normal_height"
+			android:layout_height="@dimen/row_normal_height"
+	/>
 	</LinearLayout>
 
 	<View
 		android:layout_width="match_parent"
-		android:layout_height="@dimen/divider_size"
+		android:layout_height="1dip"
 		android:background="?divider_color"/>
 
 </ch.blinkenlights.android.vanilla.DraggableRow>

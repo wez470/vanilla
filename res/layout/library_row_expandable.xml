@@ -31,18 +31,17 @@ THE SOFTWARE.
 		android:layout_width="@dimen/cover_size"
 		android:layout_height="@dimen/cover_size"
 		android:layout_marginLeft="@dimen/cover_padding"
-		android:layout_marginTop="@dimen/cover_padding"
-		android:layout_marginBottom="@dimen/cover_padding"
-		android:visibility="gone"
-	/>
+		android:layout_marginRight="@dimen/cover_padding"
+		android:layout_gravity="center_vertical"
+		android:visibility="gone" />
 	<TextView
 		android:id="@+id/text"
 		android:maxLines="2"
-		android:padding="@dimen/text_padding"
 		android:textColor="?android:textColorPrimary"
 		android:gravity="left|center_vertical"
 		android:layout_width="0px"
 		android:layout_height="@dimen/row_normal_height"
+		android:layout_marginLeft="@dimen/text_padding"
 		android:layout_weight="1" />
 
 	<View
@@ -57,9 +56,8 @@ THE SOFTWARE.
 		android:background="?android:attr/selectableItemBackground"
 		android:src="@drawable/arrow"
 		android:scaleType="center"
-		android:layout_width="@dimen/cover_size"
-		android:layout_height="@dimen/cover_size"
-		android:layout_margin="@dimen/cover_padding"
+		android:layout_width="@dimen/row_normal_height"
+		android:layout_height="@dimen/row_normal_height"
 		android:visibility="gone"
 		android:contentDescription="@string/expand" />
 </LinearLayout>
