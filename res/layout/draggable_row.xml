@@ -73,6 +73,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 	<View
 		android:layout_width="match_parent"
 		android:layout_height="1dip"
-		android:background="?divider_color"/>
+		android:background="?android:attr/dividerHorizontal"/>
 
 </ch.blinkenlights.android.vanilla.DraggableRow>

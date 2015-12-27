@@ -24,7 +24,6 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 	<style name="VanillaBase" parent="android:Theme.Material.Light.DarkActionBar">
 		<item name="overlay_background_color">@color/overlay_background_light</item>
 		<item name="overlay_foreground_color">@color/overlay_foreground_light</item>
-		<item name="divider_color">@color/button_material_light</item>
 		<item name="float_color">@color/material_grey_400</item>
 		<item name="android:colorAccent">@color/vanillaAccent</item>
 		<item name="android:colorPrimary">@color/vanillaPrimary</item>
@@ -72,7 +71,6 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 	<style name="Dark.VanillaBase" parent="android:Theme.Material">
 		<item name="overlay_background_color">@color/overlay_background_dark</item>
 		<item name="overlay_foreground_color">@color/overlay_foreground_dark</item>
-		<item name="divider_color">@color/button_material_dark</item>
 		<item name="float_color">@color/material_grey_900</item>
 		<item name="android:colorAccent">@color/vanillaAccent</item>
 		<item name="android:colorPrimary">@color/vanillaPrimary</item>
