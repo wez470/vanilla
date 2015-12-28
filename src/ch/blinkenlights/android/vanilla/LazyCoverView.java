@@ -20,9 +20,12 @@ package ch.blinkenlights.android.vanilla;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -76,11 +79,13 @@ public class LazyCoverView extends ImageView
 	 * Cover message we are passing around using mHandler
 	 */
 	private static class CoverMsg {
-		public CoverCache.CoverKey key;
-		public LazyCoverView view; // The view we are updating
-		CoverMsg(CoverCache.CoverKey key, LazyCoverView view) {
+		public CoverCache.CoverKey key; // A cache key identifying this RPC
+		public LazyCoverView view;      // The view we are updating
+		public String title;            // The title of this view, used for Initial-Covers
+		CoverMsg(CoverCache.CoverKey key, LazyCoverView view, String title) {
 			this.key = key;
 			this.view = view;
+			this.title = title;
 		}
 		/**
 		 * Returns true if the view still requires updating
@@ -138,13 +143,17 @@ public class LazyCoverView extends ImageView
 				// This message was sent due to a cache miss, but the cover might got cached in the meantime
 				Bitmap bitmap = sBitmapLruCache.get(payload.key);
 				if (bitmap == null) {
-					Song song = MediaUtils.getSongByTypeId(mContext.getContentResolver(), payload.key.mediaType, payload.key.mediaId);
-					if (song != null) {
-						// we got a song, try to fetch a cover
-						bitmap = song.getSmallCover(mContext);
+					if (payload.key.mediaType == MediaUtils.TYPE_ALBUM) {
+						// We only display real covers for albums
+						Song song = MediaUtils.getSongByTypeId(mContext.getContentResolver(), payload.key.mediaType, payload.key.mediaId);
+						if (song != null) {
+							bitmap = song.getSmallCover(mContext);
+						}
+					} else {
+						bitmap = drawCoverFromString(payload.title);
 					}
 					if (bitmap == null) {
-						// song has no cover: return a failback
+						// item has no cover: return a failback
 						bitmap = sFallbackBitmap;
 					}
 				}
@@ -171,10 +180,10 @@ public class LazyCoverView extends ImageView
 	 * @param type The Media type
 	 * @param id The id of this media type to query
 	 */
-	public void setCover(int type, long id) {
+	public void setCover(int type, long id, String title) {
 		mExpectedKey = new CoverCache.CoverKey(type, id, CoverCache.SIZE_SMALL);
 		if (drawFromCache(mExpectedKey, false) == false) {
-			CoverMsg payload = new CoverMsg(mExpectedKey, this);
+			CoverMsg payload = new CoverMsg(mExpectedKey, this, title);
 			sHandler.sendMessage(sHandler.obtainMessage(MSG_CREATE_COVER, payload));
 		}
 	}
@@ -206,6 +215,41 @@ public class LazyCoverView extends ImageView
 		return cacheHit;
 	}
 
+	/**
+	 * Draws a fake cover from given title string
+	 *
+	 * @param title A text string to use in the cover
+	 * @return bitmap The drawn bitmap
+	 */
+	private Bitmap drawCoverFromString(String title) {
+		if (title == null)
+			return null;
+
+		final int canvasSize = CoverCache.SIZE_SMALL;
+		final float textSize = canvasSize * 0.45f;
+		final int[] colors = {0xffc62828, 0xff4527a0, 0xff0277bd, 0xff2e7d32, 0xfff9a825, 0xffd84315, 0xff37474f}; // material_800 colors
+
+		title = title.replaceFirst("(?i)^The ", ""); // 'The\s' shall not be a part of the string we are drawing.
+		String subText = (title+"  ").substring(0,2);
+
+		Bitmap bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(bitmap);
+		Paint paint = new Paint();
+		paint.setColor(colors[ Math.abs(title.hashCode()) % colors.length]);
+		paint.setStyle(Paint.Style.FILL);
+		canvas.drawPaint(paint);
+
+		paint.setARGB(255, 255, 255, 255);
+		paint.setAntiAlias(true);
+		paint.setTextSize(textSize);
+
+		Rect bounds = new Rect();
+		paint.getTextBounds(subText, 0, subText.length(), bounds);
+
+		canvas.drawText(subText, (canvasSize/2f)-bounds.exactCenterX(), (canvasSize/2f)-bounds.exactCenterY(), paint);
+		return bitmap;
+
+	}
 
 
 	/**
