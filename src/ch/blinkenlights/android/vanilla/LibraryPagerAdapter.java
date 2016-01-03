@@ -152,6 +152,7 @@ public class LibraryPagerAdapter
 	 * of changes in the current page.
 	 */
 	private final LibraryActivity mActivity;
+	private final FloatingActionBar mFloatingActionBar;
 	/**
 	 * A Handler running on the UI thread.
 	 */
@@ -206,7 +207,7 @@ public class LibraryPagerAdapter
 	 * will receive callbacks from the ListViews.
 	 * @param workerLooper A Looper running on a worker thread.
 	 */
-	public LibraryPagerAdapter(LibraryActivity activity, Looper workerLooper)
+	public LibraryPagerAdapter(LibraryActivity activity, Looper workerLooper, FloatingActionBar abx)
 	{
 		if (sLruAdapterPos == null)
 			sLruAdapterPos = new AdaperPositionLruCache(32);
@@ -214,6 +215,7 @@ public class LibraryPagerAdapter
 		mUiHandler = new Handler(this);
 		mWorkerHandler = new Handler(workerLooper, this);
 		mCurrentPage = -1;
+		mFloatingActionBar = abx;
 		activity.getContentResolver().registerContentObserver(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, true, mPlaylistObserver);
 	}
 
@@ -348,6 +350,7 @@ public class LibraryPagerAdapter
 			view = (ListView)inflater.inflate(R.layout.listview, null);
 			view.setOnCreateContextMenuListener(this);
 			view.setOnItemClickListener(this);
+			view.setOnScrollListener(mFloatingActionBar);
 
 			view.setTag(type);
 			if (header != null) {

@@ -172,12 +172,14 @@ public class LibraryActivity
 			checkForLaunch(getIntent());
 		}
 
+		FloatingActionBar mFloatingActionBar = new FloatingActionBar(this);
+
 		setContentView(R.layout.library_content);
 
 		mLimiterScroller = (HorizontalScrollView)findViewById(R.id.limiter_scroller);
 		mLimiterViews = (ViewGroup)findViewById(R.id.limiter_layout);
 
-		LibraryPagerAdapter pagerAdapter = new LibraryPagerAdapter(this, mLooper);
+		LibraryPagerAdapter pagerAdapter = new LibraryPagerAdapter(this, mLooper, mFloatingActionBar);
 		mPagerAdapter = pagerAdapter;
 
 		ViewPager pager = (ViewPager)findViewById(R.id.pager);
@@ -204,6 +206,7 @@ public class LibraryActivity
 		mVanillaTabLayout = (VanillaTabLayout)findViewById(R.id.sliding_tabs);
 		mVanillaTabLayout.inheritElevation(getActionBar());
 		mVanillaTabLayout.setOnPageChangeListener(pagerAdapter);
+		mFloatingActionBar.setTopView(mVanillaTabLayout);
 
 		loadTabOrder();
 		int page = settings.getInt(PrefKeys.LIBRARY_PAGE, PrefDefaults.LIBRARY_PAGE);
