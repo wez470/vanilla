@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
+ * Copyright (C) 2016 Adrian Ulrich <adrian@blinkenlights.ch>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,49 +22,67 @@
 
 package ch.blinkenlights.android.vanilla;
 
+import android.content.res.Resources;
+
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
-import android.os.Build;
-import android.util.DisplayMetrics;
 
+import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.ImageButton;
+import android.graphics.Bitmap;
+
+import android.util.Log;
 /**
  * LinearLayout that contains some hacks for sizing inside an ActionBar.
  */
 public class ActionBarControls extends LinearLayout {
 
-	private final int dpiElementLp    = 52;  // Size of the ActionBarSearch icon in 5.x (50 + some slack)
-	private final int dpiElementHolo  = 64;  // Size of the ActionBarSearch icon in HOLO
-	private final int dpiMaxWidth     = 350; // Never use more then 350 DPIs
-	private final int visibleElements = 2;   // The ActionBarSearch + Menu icons are visible
+	private Context mContext;
+	private TextView mTitle;
+	private TextView mArtist;
+	private ImageView mCover;
+	private ImageButton mPlayPauseButton;
 
 	public ActionBarControls(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		mContext = context;
 	}
 
-	public void onMeasure(int ws, int hs) {
-		super.onMeasure(ws, hs);
+	@Override 
+	public void onFinishInflate() {
+		mTitle = (TextView)findViewById(R.id.title);
+		mArtist = (TextView)findViewById(R.id.artist);
+		mCover = (ImageView)findViewById(R.id.cover);
+		mPlayPauseButton = (ImageButton)findViewById(R.id.play_pause);
+		super.onFinishInflate();
+	}
 
-		final float density = getResources().getDisplayMetrics().density;
-		final int dpiElement = ( android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? dpiElementLp : dpiElementHolo );
-		int widthMode = MeasureSpec.getMode(ws);
+	public ImageButton getPlayPauseButton() {
+		return mPlayPauseButton;
+	}
 
-		if (widthMode != MeasureSpec.EXACTLY) {
-			float dpiAvailable = (getSmallestAxisPx() / density) - (dpiElement * visibleElements);
-			if (dpiAvailable > dpiMaxWidth || dpiAvailable < 1) {
-				dpiAvailable = dpiMaxWidth;
-			}
-			setMeasuredDimension((int)(dpiAvailable * density), (int)(dpiElement * density));
+	public void setSong(Song song) {
+		if (song == null) {
+			mTitle.setText(null);
+			mArtist.setText(null);
+			mCover.setImageBitmap(null);
+		} else {
+			Resources res = mContext.getResources();
+			String title = song.title == null ? res.getString(R.string.unknown) : song.title;
+			String artist = song.artist == null ? res.getString(R.string.unknown) : song.artist;
+			mTitle.setText(title);
+			mArtist.setText(artist);
 		}
 	}
 
-	/**
-	 * Returns the smaller axis of the display dimensions
-	 * @return The dimension of the smaller axis in pixels
-	 */
-	private final int getSmallestAxisPx() {
-		DisplayMetrics metrics = getResources().getDisplayMetrics();
-		return (metrics.widthPixels > metrics.heightPixels ? metrics.heightPixels : metrics.widthPixels);
+
+	public void setCover(Bitmap cover) {
+		if (cover == null)
+			mCover.setImageResource(R.drawable.fallback_cover);
+		else
+			mCover.setImageBitmap(cover);
 	}
 
 }

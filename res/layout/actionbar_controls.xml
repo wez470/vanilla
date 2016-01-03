@@ -22,22 +22,26 @@ THE SOFTWARE.
 -->
 <ch.blinkenlights.android.vanilla.ActionBarControls
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:background="?android:attr/selectableItemBackground"
-	android:layout_width="wrap_content"
-	android:layout_height="fill_parent"
+	android:background="#ff3c3c3c"
+	android:id="@+id/actionbar_controls"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:paddingTop="4dip"
+	android:paddingBottom="4dip"
 	android:clickable="true">
 	<ImageView
 		android:id="@+id/cover"
-		android:scaleType="fitCenter"
-		android:layout_marginLeft="5dip"
-		android:layout_width="36dip"
-		android:layout_height="36dip"
-		android:layout_gravity="center"
+		android:scaleType="centerCrop"
+		android:layout_width="@dimen/cover_size"
+		android:layout_height="@dimen/cover_size"
+		android:layout_marginLeft="@dimen/cover_padding"
+		android:layout_gravity="center_vertical"
 		android:contentDescription="@string/cover_art" />
 	<LinearLayout
 		android:layout_height="wrap_content"
-		android:layout_width="fill_parent"
-		android:layout_marginLeft="5dip"
+		android:layout_width="0px"
+		android:layout_weight="1"
+		android:layout_marginLeft="4dip"
 		android:layout_gravity="center"
 		android:orientation="vertical">
 		<TextView
@@ -59,4 +63,21 @@ THE SOFTWARE.
 			android:textColor="@android:color/secondary_text_dark"
 			android:layout_height="wrap_content" />
 	</LinearLayout>
+
+<View
+	android:layout_height="fill_parent"
+	android:layout_width="1px"
+	android:background="#ffffffff"
+/>
+
+	<ch.blinkenlights.android.vanilla.VanillaImageButton
+		android:id="@+id/play_pause"
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:background="?android:attr/selectableItemBackground"
+		android:scaleType="fitCenter"
+		android:src="@drawable/play"
+		android:contentDescription="@string/play_pause" />
+
+
 </ch.blinkenlights.android.vanilla.ActionBarControls>

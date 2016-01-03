@@ -49,7 +49,7 @@ Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
 	</style>
 
 	<style name="Universal.LibraryActionBar" parent="android:Widget.Material.ActionBar">
-		<item name="android:displayOptions"></item>
+		<item name="android:displayOptions">showTitle</item>
 		<item name="android:background">@color/vanillaPrimary</item>
 	</style>
 
