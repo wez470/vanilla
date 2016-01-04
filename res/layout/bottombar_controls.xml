@@ -82,10 +82,10 @@
 	</LinearLayout>
 
 	<LinearLayout
+		android:id="@+id/content_search"
+		android:visibility="gone"
 		android:layout_height="@dimen/row_normal_height"
-			android:layout_width="fill_parent"
-			android:id="@+id/content_search">
-
+		android:layout_width="fill_parent" >
 		<SearchView
 			android:layout_height="fill_parent"
 			android:layout_width="0px"
@@ -95,13 +95,6 @@
 			android:layout_marginLeft="0dip"
 			android:editTextColor="#ff00ff00"
 			android:id="@+id/search_view" />
-		<ImageButton
-			android:id="@+id/close_search"
-			android:layout_height="fill_parent"
-			android:layout_width="wrap_content"
-			android:background="?android:attr/selectableItemBackground"
-			android:scaleType="center"
-			android:src="@drawable/close"  />
 	</LinearLayout>
 
 

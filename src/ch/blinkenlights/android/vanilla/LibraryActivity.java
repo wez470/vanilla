@@ -131,7 +131,6 @@ public class LibraryActivity
 
 	private BottomBarControls mBottomBarControls;
 	private View mPermissionRequest;
-	private MenuItem mSearchMenuItem;
 
 	private HorizontalScrollView mLimiterScroller;
 	private ViewGroup mLimiterViews;
@@ -185,6 +184,7 @@ public class LibraryActivity
 
 		mBottomBarControls = (BottomBarControls)findViewById(R.id.bottombar_controls);
 		mBottomBarControls.setOnClickListener(this);
+		mBottomBarControls.setOnQueryTextListener(this);
 		mBottomBarControls.enableOptionsMenu(this);
 
 		mPermissionRequest = (View)findViewById(R.id.permission_request);
@@ -284,17 +284,9 @@ public class LibraryActivity
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_BACK:
 			Limiter limiter = mPagerAdapter.getCurrentLimiter();
-			MenuItem menu_item = mSearchMenuItem;
 
-			if (menu_item != null) {
-				// Check if we can collapse the search view
-				// if we can, then it was open and we handled this
-				// action
-				boolean did_collapse = menu_item.collapseActionView();
-				if (did_collapse == true) {
-					break;
-				}
-			}
+			if (mBottomBarControls.showSearch(false))
+				break;
 
 			if (limiter != null) {
 				int pos = -1;
@@ -331,7 +323,7 @@ public class LibraryActivity
 			break;
 		case KeyEvent.KEYCODE_MENU:
 			// We intercept these to avoid showing the activity-default menu
-			mBottomBarControls.showMenu();
+			mBottomBarControls.openMenu();
 			break;
 		default:
 			return false;
@@ -810,19 +802,7 @@ public class LibraryActivity
 		// Call super after adding the now-playing view as this should be the first item
 		super.onCreateOptionsMenu(menu);
 
-		// Check if we're running on Android 5.0 or higher
-		if (ThemeHelper.usesHoloTheme()) {
-				// Keep using the old icon
-				mSearchMenuItem = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_menu_search);
-		} else {
-				// Use the new material search icon
-				mSearchMenuItem = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_action_search);
-		}
-//		mSearchMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItem.SHOW_AS_ACTION_ALWAYS);
-//		SearchView mSearchView = new SearchView(getActionBar().getThemedContext());
-//		mSearchView.setOnQueryTextListener(this);
-//		mSearchMenuItem.setActionView(mSearchView);
-
+		menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_action_search);
 		menu.add(0, MENU_SORT, 0, R.string.sort_by).setIcon(R.drawable.ic_menu_sort_alphabetically);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);
 
@@ -842,7 +822,7 @@ public class LibraryActivity
 	{
 		switch (item.getItemId()) {
 		case MENU_SEARCH:
-			// this does nothing: expanding ishandled by mSearchView
+			mBottomBarControls.showSearch(true);
 			return true;
 		case MENU_PLAYBACK:
 			openPlaybackActivity();
