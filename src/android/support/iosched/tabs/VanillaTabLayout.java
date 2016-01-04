@@ -23,8 +23,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-import android.os.Build;
-
 /**
  * Simple wrapper for SlidingTabLayout which takes
  * care of setting sane per-platform defaults
@@ -57,21 +55,5 @@ public class VanillaTabLayout extends SlidingTabLayout {
 		view.setTextSize(14);
 		return view;
 	}
-
-	/**
-	 * Borrow elevation of given action bar
-	 *
-	 * @param ab The active action bar
-	 */
-	public void inheritElevation(ActionBar ab) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-			return; // noop on earlier releases
-
-		float elevation = ab.getElevation();
-		ab.setElevation(0.0f);
-		setElevation(elevation);
-	}
-
-
 
 }

@@ -129,10 +129,7 @@ public class LibraryActivity
 
 	public ViewPager mViewPager;
 
-	private View mActionControls;
-	private TextView mTitle;
-	private TextView mArtist;
-	private ImageView mCover;
+	private BottomBarControls mBottomBarControls;
 	private View mPermissionRequest;
 	private MenuItem mSearchMenuItem;
 
@@ -186,12 +183,8 @@ public class LibraryActivity
 
 		SharedPreferences settings = PlaybackService.getSettings(this);
 
-		View controls = getLayoutInflater().inflate(R.layout.actionbar_controls, null);
-		mTitle = (TextView)controls.findViewById(R.id.title);
-		mArtist = (TextView)controls.findViewById(R.id.artist);
-		mCover = (ImageView)controls.findViewById(R.id.cover);
-		controls.setOnClickListener(this);
-		mActionControls = controls;
+		mBottomBarControls = (BottomBarControls)findViewById(R.id.bottombar_controls);
+		mBottomBarControls.setOnClickListener(this);
 
 		mPermissionRequest = (View)findViewById(R.id.permission_request);
 
@@ -202,7 +195,6 @@ public class LibraryActivity
 		}
 
 		mVanillaTabLayout = (VanillaTabLayout)findViewById(R.id.sliding_tabs);
-		mVanillaTabLayout.inheritElevation(getActionBar());
 		mVanillaTabLayout.setOnPageChangeListener(pagerAdapter);
 
 		loadTabOrder();
@@ -522,10 +514,7 @@ public class LibraryActivity
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				if (cover == null)
-					mCover.setImageResource(R.drawable.fallback_cover);
-				else
-					mCover.setImageBitmap(cover);
+				mBottomBarControls.setCover(cover);
 			}
 		});
 	}
@@ -533,7 +522,7 @@ public class LibraryActivity
 	@Override
 	public void onClick(View view)
 	{
-		if (view == mCover || view == mActionControls) {
+		if (view == mBottomBarControls) {
 			openPlaybackActivity();
 		} else if (view == mPermissionRequest) {
 			PermissionRequestActivity.requestPermissions(this, getIntent());
@@ -811,9 +800,7 @@ public class LibraryActivity
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		MenuItem controls = menu.add(0, MENU_PLAYBACK, 0, R.string.playback_view);
-		controls.setActionView(mActionControls);
-		controls.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(0, MENU_PLAYBACK, 0, R.string.playback_view);
 
 		// Call super after adding the now-playing view as this should be the first item
 		super.onCreateOptionsMenu(menu);
@@ -963,22 +950,9 @@ public class LibraryActivity
 	{
 		super.onSongChange(song);
 
-		if (mTitle != null) {
-			if (song == null) {
-				mTitle.setText(null);
-				mArtist.setText(null);
-				mCover.setImageBitmap(null);
-			} else {
-				Resources res = getResources();
-				String title = song.title == null ? res.getString(R.string.unknown) : song.title;
-				String artist = song.artist == null ? res.getString(R.string.unknown) : song.artist;
-				mTitle.setText(title);
-				mArtist.setText(artist);
-				// Update and generate the cover in a background thread
-				mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_COVER, song));
-			}
-			mCover.setVisibility(CoverCache.mCoverLoadMode == 0 ? View.GONE : View.VISIBLE);
-		}
+		mBottomBarControls.setSong(song);
+		if (song != null)
+			mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_COVER, song));
 	}
 
 	@Override
