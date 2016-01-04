@@ -27,8 +27,6 @@
 	android:elevation="8dp"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
-	android:paddingTop="4dp"
-	android:paddingBottom="4dp"
 	>
 
 	<LinearLayout
@@ -95,7 +93,6 @@
 			android:layout_width="0px"
 			android:layout_weight="1"
 			android:iconifiedByDefault="false"
-			android:foreground="#ff00ffff"
 			android:layout_marginLeft="0dp"
 			android:editTextColor="#ff00ff00"
 			android:id="@+id/search_view" />
