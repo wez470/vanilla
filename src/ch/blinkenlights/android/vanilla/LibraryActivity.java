@@ -185,6 +185,7 @@ public class LibraryActivity
 
 		mBottomBarControls = (BottomBarControls)findViewById(R.id.bottombar_controls);
 		mBottomBarControls.setOnClickListener(this);
+		mBottomBarControls.enableOptionsMenu(this);
 
 		mPermissionRequest = (View)findViewById(R.id.permission_request);
 
@@ -327,6 +328,10 @@ public class LibraryActivity
 			} else {
 				finish();
 			}
+			break;
+		case KeyEvent.KEYCODE_MENU:
+			// We intercept these to avoid showing the activity-default menu
+			mBottomBarControls.showMenu();
 			break;
 		default:
 			return false;
@@ -813,10 +818,10 @@ public class LibraryActivity
 				// Use the new material search icon
 				mSearchMenuItem = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_action_search);
 		}
-		mSearchMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItem.SHOW_AS_ACTION_ALWAYS);
-		SearchView mSearchView = new SearchView(getActionBar().getThemedContext());
-		mSearchView.setOnQueryTextListener(this);
-		mSearchMenuItem.setActionView(mSearchView);
+//		mSearchMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItem.SHOW_AS_ACTION_ALWAYS);
+//		SearchView mSearchView = new SearchView(getActionBar().getThemedContext());
+//		mSearchView.setOnQueryTextListener(this);
+//		mSearchMenuItem.setActionView(mSearchView);
 
 		menu.add(0, MENU_SORT, 0, R.string.sort_by).setIcon(R.drawable.ic_menu_sort_alphabetically);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);

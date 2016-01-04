@@ -26,23 +26,24 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import android.util.Log;
 
 
 
-public class BottomBarControls extends LinearLayout
-		implements View.OnClickListener
-	{
+public class BottomBarControls extends LinearLayout {
 	/**
 	 * The application context
 	 */
 	private final Context mContext;
-	private PlaybackActivity mOnClickListener;
+
 	/**
 	 * The title of the currently playing song
 	 */
@@ -55,7 +56,10 @@ public class BottomBarControls extends LinearLayout
 	 * Cover image
 	 */
 	private ImageView mCover;
-
+	/**
+	 * The menu button
+	 */
+	private ImageButton mMenuButton;
 
 	public BottomBarControls(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -67,23 +71,34 @@ public class BottomBarControls extends LinearLayout
 		mTitle = (TextView)findViewById(R.id.title);
 		mArtist = (TextView)findViewById(R.id.artist);
 		mCover = (ImageView)findViewById(R.id.cover);
+		mMenuButton = (ImageButton)findViewById(R.id.menu_button);
 
-		setOnClickListener(this);
 		super.onFinishInflate();
 	}
 
-	@Override
-	public void onClick(View view) {
-		Log.v("VanillaMusic", "Got a click on: "+view);
-		if (mOnClickListener != null)
-			mOnClickListener.onClick(this);
+
+	public void enableOptionsMenu(final Activity owner) {
+		final PopupMenu popupMenu = new PopupMenu(mContext, mMenuButton);
+
+		popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				return owner.onOptionsItemSelected(item);
+			}
+		});
+		mMenuButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				popupMenu.show();
+			}
+		});
+
+		owner.onCreateOptionsMenu(popupMenu.getMenu());
+		mMenuButton.setVisibility(View.VISIBLE);
 	}
 
-	/**
-	 * Sets the activity to forward unhandled clicks
-	 */
-	public void setOnClickListener(PlaybackActivity activity) {
-		mOnClickListener = activity;
+	public void showMenu() {
+		mMenuButton.performClick();
 	}
 
 	/**
