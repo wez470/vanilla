@@ -1,3 +1,6 @@
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#30ffffff" >
-</ripple>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- holo style selector for pre-ripple devices -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:state_pressed="true"
+		android:drawable="@android:color/holo_blue_dark" />
+</selector>
