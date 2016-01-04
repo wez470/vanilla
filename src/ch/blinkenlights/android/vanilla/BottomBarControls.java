@@ -84,8 +84,11 @@ public class BottomBarControls extends LinearLayout
 		mSearchContent = (LinearLayout)findViewById(R.id.content_search);
 		mControlsContent = (LinearLayout)findViewById(R.id.content_controls);
 
+		mMenuButton.setImageResource(ThemeHelper.getMenuButtonResource());
+
 		mSearchView.setOnQueryTextFocusChangeListener(this);
-		styleSearchView(mSearchView, mContext.getResources().getColor(android.R.color.primary_text_dark));
+		styleSearchView(mSearchView, mContext.getResources().getColor(android.R.color.background_light));
+
 		super.onFinishInflate();
 	}
 
