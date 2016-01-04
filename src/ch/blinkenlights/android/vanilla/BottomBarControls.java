@@ -29,6 +29,7 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -84,7 +85,7 @@ public class BottomBarControls extends LinearLayout
 		mControlsContent = (LinearLayout)findViewById(R.id.content_controls);
 
 		mSearchView.setOnQueryTextFocusChangeListener(this);
-
+		styleSearchView(mSearchView, mContext.getResources().getColor(android.R.color.primary_text_dark));
 		super.onFinishInflate();
 	}
 
@@ -198,5 +199,27 @@ public class BottomBarControls extends LinearLayout
 		}
 	}
 
+	/**
+	 * Changing the colors of a search view is a MAJOR pain using XML
+	 * This cheap trick just loop trough the view and changes the
+	 * color of all text- and image views to 'style'
+	 *
+	 * @param view the view to search
+	 * @param color the color to apply
+	 */
+	private void styleSearchView(View view, int color) {
+		if (view != null) {
+			if (view instanceof TextView) {
+				((TextView)view).setTextColor(color);
+			} else if (view instanceof ImageView) {
+				((ImageView)view).setColorFilter(color);
+			} else if (view instanceof ViewGroup) {
+				ViewGroup group = (ViewGroup)view;
+				for (int i=0; i< group.getChildCount(); i++) {
+					styleSearchView(group.getChildAt(i), color);
+				}
+			}
+		}
+	}
 
 }

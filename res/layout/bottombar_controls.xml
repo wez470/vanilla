@@ -23,7 +23,7 @@
 
 <ch.blinkenlights.android.vanilla.BottomBarControls
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:background="#ffff3c3c"
+	android:background="#ff212121"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
 	android:paddingTop="4dip"
@@ -33,6 +33,7 @@
 	<LinearLayout
 		android:layout_height="@dimen/row_normal_height"
 		android:layout_width="fill_parent"
+		android:background="?android:attr/selectableItemBackground"
 		android:id="@+id/content_controls">
 
 		<ImageView
@@ -47,7 +48,6 @@
 			android:layout_height="wrap_content"
 			android:layout_width="0px"
 			android:layout_weight="1"
-			android:background="#ff3333ff"
 			android:layout_marginLeft="@dimen/text_padding"
 			android:layout_gravity="center"
 			android:orientation="vertical">
