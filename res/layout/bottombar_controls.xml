@@ -32,7 +32,7 @@
 	<LinearLayout
 		android:layout_height="@dimen/row_normal_height"
 		android:layout_width="fill_parent"
-		android:background="?android:attr/selectableItemBackground"
+		android:background="@drawable/unbound_ripple_light"
 		android:id="@+id/content_controls">
 
 		<ImageView
@@ -75,7 +75,7 @@
 			android:visibility="gone"
 			android:layout_height="fill_parent"
 			android:layout_width="wrap_content"
-			android:background="?android:attr/selectableItemBackground"
+			android:background="@drawable/unbound_ripple_light"
 			android:scaleType="center"
 			android:paddingRight="12dp"
 			android:paddingLeft="12dp"
