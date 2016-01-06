@@ -203,7 +203,7 @@ public class BottomBarControls extends LinearLayout
 			mSearchView.setVisibility(visible ? View.VISIBLE : View.GONE);
 			mControlsContent.setVisibility(visible ? View.GONE : View.VISIBLE);
 			if (visible)
-				mSearchView.requestFocus();
+				mSearchView.setIconified(false); // requests focus AND shows the soft keyboard even if the view already was expanded
 			else
 				mSearchView.setQuery("", false);
 		}
