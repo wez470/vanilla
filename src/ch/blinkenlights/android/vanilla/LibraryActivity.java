@@ -802,7 +802,9 @@ public class LibraryActivity
 		// Call super after adding the now-playing view as this should be the first item
 		super.onCreateOptionsMenu(menu);
 
-		menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_action_search);
+		MenuItem search = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_action_search);
+		search.setVisible(false);
+
 		menu.add(0, MENU_SORT, 0, R.string.sort_by).setIcon(R.drawable.ic_menu_sort_alphabetically);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);
 

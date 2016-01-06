@@ -33,6 +33,7 @@
 		android:layout_height="@dimen/row_normal_height"
 		android:layout_width="fill_parent"
 		android:background="@drawable/unbound_ripple_light"
+		android:gravity="center_vertical"
 		android:id="@+id/content_controls">
 
 		<ImageView
@@ -69,18 +70,6 @@
 				android:textColor="@android:color/secondary_text_dark"
 				android:layout_height="wrap_content" />
 		</LinearLayout>
-
-		<ImageButton
-			android:id="@+id/menu_button"
-			android:visibility="gone"
-			android:layout_height="fill_parent"
-			android:layout_width="wrap_content"
-			android:background="@drawable/unbound_ripple_light"
-			android:scaleType="center"
-			android:paddingRight="12dp"
-			android:paddingLeft="12dp"
-			android:tint="@android:color/background_light"
-			android:src="@drawable/ic_menu_moreoverflow_normal_holo_dark" />
 	</LinearLayout>
 
 	<LinearLayout

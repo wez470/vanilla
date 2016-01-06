@@ -25,8 +25,10 @@ package ch.blinkenlights.android.vanilla;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +45,8 @@ import android.util.Log;
 
 public class BottomBarControls extends LinearLayout
 	implements View.OnFocusChangeListener
+	         , View.OnClickListener
+	         , PopupMenu.OnMenuItemClickListener
 	{
 	/**
 	 * The application context
@@ -61,12 +65,25 @@ public class BottomBarControls extends LinearLayout
 	 */
 	private ImageView mCover;
 	/**
-	 * The menu button
+	 * A layout hosting the search view
 	 */
-	private ImageButton mMenuButton;
 	private LinearLayout mSearchContent;
+	/**
+	 * A layout hosting the song information
+	 */
 	private LinearLayout mControlsContent;
+	/**
+	 * Standard android search view
+	 */
 	private SearchView mSearchView;
+	/**
+	 * ControlsContent click consumer, may be null
+	 */
+	private View.OnClickListener mParentClickConsumer;
+	/**
+	 * Owner of our options menu and consumer of clicks
+	 */
+	private Activity mParentMenuConsumer;
 
 
 	public BottomBarControls(Context context, AttributeSet attrs) {
@@ -79,12 +96,9 @@ public class BottomBarControls extends LinearLayout
 		mTitle = (TextView)findViewById(R.id.title);
 		mArtist = (TextView)findViewById(R.id.artist);
 		mCover = (ImageView)findViewById(R.id.cover);
-		mMenuButton = (ImageButton)findViewById(R.id.menu_button);
 		mSearchView = (SearchView)findViewById(R.id.search_view);
 		mSearchContent = (LinearLayout)findViewById(R.id.content_search);
 		mControlsContent = (LinearLayout)findViewById(R.id.content_controls);
-
-		mMenuButton.setImageResource(ThemeHelper.getMenuButtonResource());
 
 		mSearchView.setOnQueryTextFocusChangeListener(this);
 		styleSearchView(mSearchView, mContext.getResources().getColor(android.R.color.background_light));
@@ -93,23 +107,36 @@ public class BottomBarControls extends LinearLayout
 	}
 
 	@Override
-	public void onFocusChange(View v, boolean hasFocus) {
-		if (hasFocus == false && v == mSearchView)
+	public void onFocusChange(View view, boolean hasFocus) {
+		if (hasFocus == false && view == mSearchView)
 			showSearch(false);
 	}
 
+	@Override
+	public void onClick(View view) {
+		Object tag = view.getTag();
+		if (tag instanceof PopupMenu) {
+			((PopupMenu)tag).show();
+		} else if (tag instanceof MenuItem) {
+			mParentMenuConsumer.onOptionsItemSelected((MenuItem)tag);
+		} else if (view == mControlsContent && mParentClickConsumer != null) {
+			// dispatch this click to parent, claiming it came from
+			// the top view (= this)
+			mParentClickConsumer.onClick(this);
+		}
+	}
+
+	@Override
+	public boolean onMenuItemClick(MenuItem item) {
+		return mParentMenuConsumer.onOptionsItemSelected(item);
+	}
+
 	/**
-	 * Hijack this call as we do not want to be clickable:
-	 * The setOnClickListener will be set on a sub element
-	 * but the callback will still return this instance
+	 * Sets the ControlsContent to be clickable
 	 */
-	public void setOnClickListener(final View.OnClickListener l) {
-		final View target = (View)this;
-		mControlsContent.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				l.onClick(target);
-			}
-		});
+	public void setOnClickListener(View.OnClickListener listener) {
+		mParentClickConsumer = listener;
+		mControlsContent.setOnClickListener(this);
 	}
 
 	/**
@@ -119,37 +146,46 @@ public class BottomBarControls extends LinearLayout
 		mSearchView.setOnQueryTextListener(owner);
 	}
 
-
 	/**
 	 * Boots the options menu
 	 *
 	 * @param owner the activity who will receive our callbacks
 	 */
-	public void enableOptionsMenu(final Activity owner) {
-		final PopupMenu popupMenu = new PopupMenu(mContext, mMenuButton);
+	public void enableOptionsMenu(Activity owner) {
+		mParentMenuConsumer = owner;
 
-		popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-			@Override
-			public boolean onMenuItemClick(MenuItem item) {
-				return owner.onOptionsItemSelected(item);
-			}
-		});
-		mMenuButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				popupMenu.show();
-			}
-		});
+		ImageButton menuButton = getImageButton(getResources().getDrawable(ThemeHelper.getMenuButtonResource()));
+		PopupMenu popupMenu = new PopupMenu(mContext, menuButton);
+		popupMenu.setOnMenuItemClickListener(this);
 
-		owner.onCreateOptionsMenu(popupMenu.getMenu());
-		mMenuButton.setVisibility(View.VISIBLE);
+		// Let parent populate the menu
+		mParentMenuConsumer.onCreateOptionsMenu(popupMenu.getMenu());
+
+		// The menu is now ready, we an now add all invisible
+		// items to the toolbar
+		Menu menu = popupMenu.getMenu();
+		for (int i=0; i < menu.size(); i++) {
+			MenuItem menuItem = menu.getItem(i);
+			if (menuItem.isVisible() == false) {
+				ImageButton button = getImageButton(menuItem.getIcon());
+				button.setTag(menuItem);
+				button.setOnClickListener(this);
+				mControlsContent.addView(button, -1);
+			}
+		}
+
+		// Add menu button at end of view
+		menuButton.setTag(popupMenu);
+		menuButton.setOnClickListener(this);
+		mControlsContent.addView(menuButton, -1);
 	}
 
 	/**
 	 * Opens the OptionsMenu of this view
 	 */
 	public void openMenu() {
-		mMenuButton.performClick();
+		// simulates a click on the rightmost child which should be the options menu
+		mControlsContent.getChildAt(mControlsContent.getChildCount()-1).performClick();
 	}
 
 	/**
@@ -200,6 +236,18 @@ public class BottomBarControls extends LinearLayout
 			mTitle.setText(title);
 			mArtist.setText(artist);
 		}
+	}
+
+	/**
+	 * Returns a new image button to be placed on the bar
+	 *
+	 * @param drawable The icon to use
+	 */
+	private ImageButton getImageButton(Drawable drawable) {
+		ImageButton button = new ImageButton(mContext);
+		button.setImageDrawable(drawable);
+		button.setBackgroundResource(R.drawable.unbound_ripple_light);
+		return button;
 	}
 
 	/**
