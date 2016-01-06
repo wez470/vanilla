@@ -29,6 +29,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -158,7 +159,7 @@ public class BottomBarControls extends LinearLayout
 		mParentMenuConsumer = owner;
 
 		ImageButton menuButton = getImageButton(getResources().getDrawable(R.drawable.ic_menu_moreoverflow));
-		PopupMenu popupMenu = new PopupMenu(mContext, menuButton);
+		PopupMenu popupMenu = (menuMargin() ? new PopupMenu(mContext, menuButton, Gravity.RIGHT) : new PopupMenu(mContext, menuButton));
 		popupMenu.setOnMenuItemClickListener(this);
 
 		// Let parent populate the menu
@@ -247,9 +248,16 @@ public class BottomBarControls extends LinearLayout
 	 * @param drawable The icon to use
 	 */
 	private ImageButton getImageButton(Drawable drawable) {
+
 		ImageButton button = new ImageButton(mContext);
 		button.setImageDrawable(drawable);
 		button.setBackgroundResource(R.drawable.unbound_ripple_light);
+
+		if (menuMargin()) {
+			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			params.rightMargin = (int)(getResources().getDisplayMetrics().density * 4.0f);
+			button.setLayoutParams(params);
+		}
 		return button;
 	}
 
@@ -276,4 +284,11 @@ public class BottomBarControls extends LinearLayout
 		}
 	}
 
+	/**
+	 * Returns true if we need to add a margin to the menu.
+	 * Because ...reasons.
+	 */
+	private boolean menuMargin() {
+		return ThemeHelper.usesHoloTheme() == false;
+	}
 }
