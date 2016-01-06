@@ -67,13 +67,6 @@ public class ThemeHelper {
 	}
 
 	/**
-	 * Returns the image drawable to use for an options menu
-	 */
-	final public static int getMenuButtonResource() {
-		return usesHoloTheme() ? R.drawable.ic_menu_moreoverflow_normal_holo_dark : R.drawable.ic_menu_moreoverflow_material;
-	}
-
-	/**
 	 * Returns TRUE if we should use the dark material theme,
 	 * Returns FALSE otherwise - always returns FALSE on pre-5.x devices
 	 */

@@ -154,7 +154,7 @@ public class BottomBarControls extends LinearLayout
 	public void enableOptionsMenu(Activity owner) {
 		mParentMenuConsumer = owner;
 
-		ImageButton menuButton = getImageButton(getResources().getDrawable(ThemeHelper.getMenuButtonResource()));
+		ImageButton menuButton = getImageButton(getResources().getDrawable(R.drawable.ic_menu_moreoverflow));
 		PopupMenu popupMenu = new PopupMenu(mContext, menuButton);
 		popupMenu.setOnMenuItemClickListener(this);
 
