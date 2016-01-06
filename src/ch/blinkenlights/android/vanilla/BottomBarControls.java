@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -124,6 +125,13 @@ public class BottomBarControls extends LinearLayout
 	@Override
 	public boolean onMenuItemClick(MenuItem item) {
 		return mParentMenuConsumer.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public Parcelable onSaveInstanceState() {
+		// Forcefully hide (and clear) search as we are not going to restore the state
+		showSearch(false);
+		return super.onSaveInstanceState();
 	}
 
 	/**
