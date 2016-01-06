@@ -65,10 +65,6 @@ public class BottomBarControls extends LinearLayout
 	 */
 	private ImageView mCover;
 	/**
-	 * A layout hosting the search view
-	 */
-	private LinearLayout mSearchContent;
-	/**
 	 * A layout hosting the song information
 	 */
 	private LinearLayout mControlsContent;
@@ -97,7 +93,6 @@ public class BottomBarControls extends LinearLayout
 		mArtist = (TextView)findViewById(R.id.artist);
 		mCover = (ImageView)findViewById(R.id.cover);
 		mSearchView = (SearchView)findViewById(R.id.search_view);
-		mSearchContent = (LinearLayout)findViewById(R.id.content_search);
 		mControlsContent = (LinearLayout)findViewById(R.id.content_controls);
 
 		mSearchView.setOnQueryTextFocusChangeListener(this);
@@ -195,9 +190,9 @@ public class BottomBarControls extends LinearLayout
 	 * @return boolean old state
 	 */
 	public boolean showSearch(boolean visible) {
-		boolean wasVisible = mSearchContent.getVisibility() == View.VISIBLE;
+		boolean wasVisible = mSearchView.getVisibility() == View.VISIBLE;
 		if (wasVisible != visible) {
-			mSearchContent.setVisibility(visible ? View.VISIBLE : View.GONE);
+			mSearchView.setVisibility(visible ? View.VISIBLE : View.GONE);
 			mControlsContent.setVisibility(visible ? View.GONE : View.VISIBLE);
 			if (visible)
 				mSearchView.requestFocus();

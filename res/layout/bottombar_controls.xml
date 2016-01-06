@@ -72,19 +72,12 @@
 		</LinearLayout>
 	</LinearLayout>
 
-	<LinearLayout
-		android:id="@+id/content_search"
+	<SearchView
 		android:visibility="gone"
 		android:layout_height="@dimen/row_normal_height"
-		android:layout_width="fill_parent" >
-		<SearchView
-			android:layout_height="fill_parent"
-			android:layout_width="0px"
-			android:layout_weight="1"
-			android:iconifiedByDefault="false"
-			android:layout_marginLeft="0dp"
-			android:id="@+id/search_view" />
-	</LinearLayout>
+		android:layout_width="fill_parent"
+		android:iconifiedByDefault="false"
+		android:id="@+id/search_view" />
 
 
 </ch.blinkenlights.android.vanilla.BottomBarControls>
