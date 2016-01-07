@@ -41,13 +41,9 @@ import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.TextView;
 
-import android.util.Log;
-
-
 
 public class BottomBarControls extends LinearLayout
-	implements View.OnFocusChangeListener
-	         , View.OnClickListener
+	implements View.OnClickListener
 	         , PopupMenu.OnMenuItemClickListener
 	{
 	/**
@@ -89,7 +85,7 @@ public class BottomBarControls extends LinearLayout
 		mContext = context;
 	}
 
-	@Override 
+	@Override
 	public void onFinishInflate() {
 		mTitle = (TextView)findViewById(R.id.title);
 		mArtist = (TextView)findViewById(R.id.artist);
@@ -97,16 +93,9 @@ public class BottomBarControls extends LinearLayout
 		mSearchView = (SearchView)findViewById(R.id.search_view);
 		mControlsContent = (LinearLayout)findViewById(R.id.content_controls);
 
-		mSearchView.setOnQueryTextFocusChangeListener(this);
 		styleSearchView(mSearchView, mContext.getResources().getColor(android.R.color.background_light));
 
 		super.onFinishInflate();
-	}
-
-	@Override
-	public void onFocusChange(View view, boolean hasFocus) {
-		if (hasFocus == false && view == mSearchView)
-			showSearch(false);
 	}
 
 	@Override
