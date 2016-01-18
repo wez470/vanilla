@@ -201,8 +201,10 @@ public class FileSystemAdapter
 			holder = new ViewHolder();
 			holder.text = (TextView)view.findViewById(R.id.text);
 			holder.divider = (View)view.findViewById(R.id.divider);
+			holder.cover = (LazyCoverView)view.findViewById(R.id.cover);
 			holder.arrow = (ImageView)view.findViewById(R.id.arrow);
-			holder.text.setOnClickListener(this);
+
+			holder.cover.setImageDrawable(mFolderIcon);
 			holder.arrow.setOnClickListener(this);
 			view.setTag(holder);
 		} else {
@@ -216,7 +218,7 @@ public class FileSystemAdapter
 		holder.text.setText(file.getName());
 		holder.arrow.setVisibility(isDirectory ? View.VISIBLE : View.GONE);
 		holder.divider.setVisibility(isDirectory ? View.VISIBLE : View.GONE);
-		holder.text.setCompoundDrawablesWithIntrinsicBounds(isDirectory ? mFolderIcon : null, null, null, null);
+		holder.cover.setVisibility(isDirectory ? View.VISIBLE : View.GONE);
 		return view;
 	}
 
@@ -311,7 +313,11 @@ public class FileSystemAdapter
 
 	@Override
 	public void onClick(View view) {
-		Intent intent = createData((View)view.getParent());
+		onHandleRowClick((View)view.getParent());
+	}
+
+	public void onHandleRowClick(View view) {
+		Intent intent = createData(view);
 		boolean isFolder = intent.getBooleanExtra(LibraryAdapter.DATA_EXPANDABLE, false);
 
 		if (FileUtils.canDispatchIntent(intent) && FileUtils.dispatchIntent(mActivity, intent))

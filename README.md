@@ -17,6 +17,10 @@ You can donate to Vanilla Musics development via gratipay
 
 [![Support via Gratipay](https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png)](https://gratipay.com/vanilla-music/)
 
+Community
+===========
+Come over and join us on our subreddit [**/r/VanillaMusic**](https://www.reddit.com/r/vanillamusic) to hangout with fellow Vanilla Music users, ask questions, or help others by answering their questions!
+
 Contributing
 ===========
 
@@ -58,6 +62,10 @@ Building from Eclipse
 You can also build from Eclipse. Create a new Android Project, choosing "Create
 project from exisiting source", then set the compiler compliance level to 1.6
 in project settings.
+
+Nightly Builds
+---------------------
+Automatically created builds are available from http://android.eqmx.net/android/vanilla/
 
 Documentation
 =============

@@ -20,6 +20,7 @@ package ch.blinkenlights.android.vanilla;
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -70,13 +71,7 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 	private MediaAdapter mPlaylistAdapter;
 	private MediaAdapter mGenreAdapter;
 	private MediaAdapter[] mMediaAdapters = new MediaAdapter[MediaUtils.TYPE_GENRE + 1];
-	private List<MediaBrowser.MediaItem> mAlbums = new ArrayList<MediaBrowser.MediaItem>();
-	private List<MediaBrowser.MediaItem> mArtists = new ArrayList<MediaBrowser.MediaItem>();
-	private List<MediaBrowser.MediaItem> mSongs = new ArrayList<MediaBrowser.MediaItem>();
-	private List<MediaBrowser.MediaItem> mPlaylists = new ArrayList<MediaBrowser.MediaItem>();
-	private List<MediaBrowser.MediaItem> mGenres = new ArrayList<MediaBrowser.MediaItem>();
-	private List<MediaBrowser.MediaItem> mFiltered = new ArrayList<MediaBrowser.MediaItem>();
-	private boolean mCatalogReady = false;
+	private List<MediaBrowser.MediaItem> mQueryResult = new ArrayList<MediaBrowser.MediaItem>();
 
 	private final List<MediaBrowser.MediaItem> mMediaRoot = new ArrayList<MediaBrowser.MediaItem>();
 
@@ -347,36 +342,31 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 			protected Integer doInBackground(Void... params) {
 				int result = ASYNCTASK_FAILED;
 				try {
-					if(!mCatalogReady) {
-						runQuery(mArtists, MediaUtils.TYPE_ARTIST , mArtistAdapter);
-						runQuery(mAlbums, MediaUtils.TYPE_ALBUM, mAlbumAdapter);
-						runQuery(mSongs, MediaUtils.TYPE_SONG, mSongAdapter);
-						runQuery(mGenres, MediaUtils.TYPE_GENRE, mGenreAdapter);
-						runQuery(mPlaylists, MediaUtils.TYPE_PLAYLIST, mPlaylistAdapter);
-						mCatalogReady = true;
-					}
-					if(limiter != null) {
-						mFiltered.clear();
+					mQueryResult.clear();
+					clearLimiters();
+					if(parent.isTopAdapter()) {
+						runQuery(mQueryResult, parent.mType, mMediaAdapters[parent.mType]);
+					} else if (limiter != null) {
 						switch(limiter.type) {
 							case MediaUtils.TYPE_ALBUM:
 								mSongAdapter.setLimiter(limiter);
-								runQuery(mFiltered, MediaUtils.TYPE_SONG, mSongAdapter);
+								runQuery(mQueryResult, MediaUtils.TYPE_SONG, mSongAdapter);
 							break;
 							case MediaUtils.TYPE_ARTIST:
 								mAlbumAdapter.setLimiter(limiter);
-								runQuery(mFiltered, MediaUtils.TYPE_ALBUM, mAlbumAdapter);
+								runQuery(mQueryResult, MediaUtils.TYPE_ALBUM, mAlbumAdapter);
 							break;
 							case MediaUtils.TYPE_SONG:
 								mSongAdapter.setLimiter(limiter);
-								runQuery(mFiltered, MediaUtils.TYPE_SONG, mSongAdapter);
+								runQuery(mQueryResult, MediaUtils.TYPE_SONG, mSongAdapter);
 							break;
 							case MediaUtils.TYPE_PLAYLIST:
 								mPlaylistAdapter.setLimiter(limiter);
-								runQuery(mFiltered, MediaUtils.TYPE_PLAYLIST, mPlaylistAdapter);
+								runQuery(mQueryResult, MediaUtils.TYPE_PLAYLIST, mPlaylistAdapter);
 							break;
 							case MediaUtils.TYPE_GENRE:
 								mSongAdapter.setLimiter(limiter);
-								runQuery(mFiltered, MediaUtils.TYPE_SONG, mSongAdapter);
+								runQuery(mQueryResult, MediaUtils.TYPE_SONG, mSongAdapter);
 							break;
 						}
 					}
@@ -391,32 +381,7 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 			protected void onPostExecute(Integer current) {
 				List<MediaBrowser.MediaItem> items = null;
 				if (result != null) {
-					if(parent.isTopAdapter()) {
-						switch(parent.mType) {
-							case MediaUtils.TYPE_ALBUM:
-								items = mAlbums;
-								mAlbumAdapter.setLimiter(null);
-							break;
-							case MediaUtils.TYPE_ARTIST:
-								items = mArtists;
-								mArtistAdapter.setLimiter(null);
-							break;
-							case MediaUtils.TYPE_SONG:
-								items = mSongs;
-								mSongAdapter.setLimiter(null);
-							break;
-							case MediaUtils.TYPE_PLAYLIST:
-								items = mPlaylists;
-								mPlaylistAdapter.setLimiter(null);
-							break;
-							case MediaUtils.TYPE_GENRE:
-								items = mGenres;
-								mGenreAdapter.setLimiter(null);
-							break;
-						}
-					} else {
-						items = mFiltered;
-					}
+					items = mQueryResult;
 					if (current == ASYNCTASK_SUCCEEDED) {
 						result.sendResult(items);
 					} else {
@@ -427,15 +392,12 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 		}.execute();
 	}
 
-	private Uri getArtUri(int mediaType, String id) {
-		switch(mediaType) {
-			case MediaUtils.TYPE_SONG:
-				return Uri.parse("content://media/external/audio/media/" + id + "/albumart");
-			case MediaUtils.TYPE_ALBUM:
-				return Uri.parse("content://media/external/audio/albumart/" + id);
+	private void clearLimiters() {
+		for(MediaAdapter adapter : mMediaAdapters) {
+			adapter.setLimiter(null);
 		}
-		return Uri.parse("android.resource://ch.blinkenlights.android.vanilla/drawable/fallback_cover");
 	}
+
 
 	private String  subtitleForMediaType(int mediaType) {
 		switch(mediaType) {
@@ -457,27 +419,28 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 		populateMe.clear();
 		try {
 			Cursor cursor = adapter.query();
+			Context context = getApplicationContext();
+			ContentResolver resolver = context.getContentResolver();
 
 			if (cursor == null) {
 				return;
 			}
 
-			final int flags =      (mediaType != MediaUtils.TYPE_SONG)
-								&& (mediaType != MediaUtils.TYPE_PLAYLIST) ?
-								    MediaBrowser.MediaItem.FLAG_BROWSABLE  : MediaBrowser.MediaItem.FLAG_PLAYABLE;
-
+			final int flags = (mediaType == MediaUtils.TYPE_SONG || mediaType == MediaUtils.TYPE_PLAYLIST) ? MediaBrowser.MediaItem.FLAG_PLAYABLE : MediaBrowser.MediaItem.FLAG_BROWSABLE;
 			final int count = cursor.getCount();
-
 			for (int j = 0; j != count; ++j) {
 				cursor.moveToPosition(j);
 				final String id = cursor.getString(0);
 				final String label = cursor.getString(2);
+				long mediaId = Long.parseLong(id);
+
+				Song song = MediaUtils.getSongByTypeId(resolver, mediaType, mediaId);
 				MediaBrowser.MediaItem item = new MediaBrowser.MediaItem(
 					new MediaDescription.Builder()
-						.setMediaId(MediaID.toString(mediaType, Long.parseLong(id), label))
+						.setMediaId(MediaID.toString(mediaType, mediaId, label))
 						.setTitle(label)
 						.setSubtitle(subtitleForMediaType(mediaType))
-						.setIconUri(getArtUri(mediaType, id))
+						.setIconBitmap(song.getSmallCover(context))
 						.build(),
 						flags);
 				populateMe.add(item);

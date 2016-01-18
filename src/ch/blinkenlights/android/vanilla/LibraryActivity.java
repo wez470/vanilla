@@ -45,6 +45,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.iosched.tabs.VanillaTabLayout;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -67,7 +68,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.SearchView;
 
-import com.viewpagerindicator.TabPageIndicator;
 import java.io.File;
 import junit.framework.Assert;
 
@@ -133,18 +133,12 @@ public class LibraryActivity
 		  -1, -1, -1, SongTimeline.MODE_ENQUEUE_AS_NEXT };
 
 	public ViewPager mViewPager;
-	private TabPageIndicator mTabs;
 
-	private View mActionControls;
-	private TextView mTitle;
-	private TextView mArtist;
-	private ImageView mCover;
-	private View mPermissionRequest;
-	private MenuItem mSearchMenuItem;
+	private BottomBarControls mBottomBarControls;
 
 	private HorizontalScrollView mLimiterScroller;
 	private ViewGroup mLimiterViews;
-
+	private VanillaTabLayout mVanillaTabLayout;
 	/**
 	 * The action to execute when a row is tapped.
 	 */
@@ -224,23 +218,18 @@ public class LibraryActivity
 		mViewPager = pager;
 
 		SharedPreferences settings = PlaybackService.getSettings(this);
-		pager.setOnPageChangeListener(pagerAdapter);
 
-		View controls = getLayoutInflater().inflate(R.layout.actionbar_controls, null);
-		mTitle = (TextView)controls.findViewById(R.id.title);
-		mArtist = (TextView)controls.findViewById(R.id.artist);
-		mCover = (ImageView)controls.findViewById(R.id.cover);
-		controls.setOnClickListener(this);
-		mActionControls = controls;
-
-		mPermissionRequest = (View)findViewById(R.id.permission_request);
+		mBottomBarControls = (BottomBarControls)findViewById(R.id.bottombar_controls);
+		mBottomBarControls.setOnClickListener(this);
+		mBottomBarControls.setOnQueryTextListener(this);
+		mBottomBarControls.enableOptionsMenu(this);
 
 		if(PermissionRequestActivity.havePermissions(this) == false) {
-			// We are lacking permissions: bind and display nag bar
-			mPermissionRequest.setOnClickListener(this);
-			mPermissionRequest.setVisibility(View.VISIBLE);
+			PermissionRequestActivity.showWarning(this, getIntent());
 		}
 
+		mVanillaTabLayout = (VanillaTabLayout)findViewById(R.id.sliding_tabs);
+		mVanillaTabLayout.setOnPageChangeListener(pagerAdapter);
 
 		loadTabOrder();
 		int page = settings.getInt(PrefKeys.LIBRARY_PAGE, PrefDefaults.LIBRARY_PAGE);
@@ -275,7 +264,8 @@ public class LibraryActivity
 	private void loadTabOrder()
 	{
 		if (mPagerAdapter.loadTabOrder()) {
-			CompatHoneycomb.addActionBarTabs(this);
+			// Reinitializes all tabs
+			mVanillaTabLayout.setViewPager(mViewPager);
 		}
 	}
 
@@ -327,17 +317,9 @@ public class LibraryActivity
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_BACK:
 			Limiter limiter = mPagerAdapter.getCurrentLimiter();
-			MenuItem menu_item = mSearchMenuItem;
 
-			if (menu_item != null) {
-				// Check if we can collapse the search view
-				// if we can, then it was open and we handled this
-				// action
-				boolean did_collapse = menu_item.collapseActionView();
-				if (did_collapse == true) {
-					break;
-				}
-			}
+			if (mBottomBarControls.showSearch(false))
+				break;
 
 			if (limiter != null) {
 				int pos = -1;
@@ -371,6 +353,10 @@ public class LibraryActivity
 			} else {
 				finish();
 			}
+			break;
+		case KeyEvent.KEYCODE_MENU:
+			// We intercept these to avoid showing the activity-default menu
+			mBottomBarControls.openMenu();
 			break;
 		default:
 			return false;
@@ -558,10 +544,7 @@ public class LibraryActivity
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				if (cover == null)
-					mCover.setImageResource(R.drawable.fallback_cover);
-				else
-					mCover.setImageBitmap(cover);
+				mBottomBarControls.setCover(cover);
 			}
 		});
 	}
@@ -569,10 +552,8 @@ public class LibraryActivity
 	@Override
 	public void onClick(View view)
 	{
-		if (view == mCover || view == mActionControls) {
+		if (view == mBottomBarControls) {
 			openPlaybackActivity();
-		} else if (view == mPermissionRequest) {
-			PermissionRequestActivity.requestPermissions(this, getIntent());
 		} else if (view.getTag() != null) {
 			// a limiter view was clicked
 			int i = (Integer)view.getTag();
@@ -847,18 +828,12 @@ public class LibraryActivity
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		MenuItem controls = menu.add(0, MENU_PLAYBACK, 0, R.string.playback_view);
-		controls.setActionView(mActionControls);
-		controls.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-		// Call super after adding the now-playing view as this should be the first item
+		// called before super to have it on top
+		menu.add(0, MENU_PLAYBACK, 0, R.string.playback_view);
 		super.onCreateOptionsMenu(menu);
 
-		mSearchMenuItem = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_menu_search);
-		mSearchMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItem.SHOW_AS_ACTION_ALWAYS);
-		SearchView mSearchView = new SearchView(getActionBar().getThemedContext());
-		mSearchView.setOnQueryTextListener(this);
-		mSearchMenuItem.setActionView(mSearchView);
+		MenuItem search = menu.add(0, MENU_SEARCH, 0, R.string.search).setIcon(R.drawable.ic_menu_search);
+		search.setVisible(false);
 
 		menu.add(0, MENU_SORT, 0, R.string.sort_by).setIcon(R.drawable.ic_menu_sort_alphabetically);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);
@@ -879,7 +854,7 @@ public class LibraryActivity
 	{
 		switch (item.getItemId()) {
 		case MENU_SEARCH:
-			// this does nothing: expanding ishandled by mSearchView
+			mBottomBarControls.showSearch(true);
 			return true;
 		case MENU_PLAYBACK:
 			openPlaybackActivity();
@@ -992,22 +967,9 @@ public class LibraryActivity
 	{
 		super.onSongChange(song);
 
-		if (mTitle != null) {
-			if (song == null) {
-				mTitle.setText(null);
-				mArtist.setText(null);
-				mCover.setImageBitmap(null);
-			} else {
-				Resources res = getResources();
-				String title = song.title == null ? res.getString(R.string.unknown) : song.title;
-				String artist = song.artist == null ? res.getString(R.string.unknown) : song.artist;
-				mTitle.setText(title);
-				mArtist.setText(artist);
-				// Update and generate the cover in a background thread
-				mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_COVER, song));
-			}
-			mCover.setVisibility(CoverCache.mCoverLoadMode == 0 ? View.GONE : View.VISIBLE);
-		}
+		mBottomBarControls.setSong(song);
+		if (song != null)
+			mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_COVER, song));
 	}
 
 	@Override
@@ -1041,7 +1003,6 @@ public class LibraryActivity
 		mCurrentAdapter = adapter;
 		mLastActedId = LibraryAdapter.INVALID_ID;
 		updateLimiterViews();
-		CompatHoneycomb.selectTab(this, position);
 		if (adapter != null && (adapter.getLimiter() == null || adapter.getMediaType() == MediaUtils.TYPE_FILE)) {
 			// Save current page so it is opened on next startup. Don't save if
 			// the page was expanded to, as the expanded page isn't the starting

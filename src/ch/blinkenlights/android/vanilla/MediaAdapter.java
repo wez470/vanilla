@@ -170,9 +170,9 @@ public class MediaAdapter
 			mInflater = null; // not running inside an activity
 		}
 
-
-		mCoverCacheType = MediaUtils.TYPE_INVALID;
-		String coverCacheKey = "0"; // SQL dummy entry
+		// Use media type + base id as cache key combination
+		mCoverCacheType = mType;
+		String coverCacheKey = BaseColumns._ID;
 
 		switch (type) {
 		case MediaUtils.TYPE_ARTIST:
@@ -191,8 +191,6 @@ public class MediaAdapter
 			mSongSort = MediaUtils.ALBUM_SORT;
 			mSortEntries = new int[] { R.string.name, R.string.artist_album, R.string.year, R.string.number_of_tracks, R.string.date_added };
 			mSortValues = new String[] { "album_key %1$s", "artist_key %1$s,album_key %1$s", "minyear %1$s,album_key %1$s", "numsongs %1$s,album_key %1$s", "_id %1$s" };
-			mCoverCacheType = MediaUtils.TYPE_ALBUM;
-			coverCacheKey = BaseColumns._ID;
 			break;
 		case MediaUtils.TYPE_SONG:
 			mStore = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -204,6 +202,7 @@ public class MediaAdapter
 			mSortValues = new String[] { "title_key %1$s", "artist_key %1$s,album_key %1$s,track", "artist_key %1$s,album_key %1$s,title_key %1$s",
 			                             "artist_key %1$s,year %1$s,album_key %1$s, track", "album_key %1$s,track",
 			                             "year %1$s,title_key %1$s","_id %1$s", SORT_MAGIC_PLAYCOUNT };
+			// Songs covers are cached per-album
 			mCoverCacheType = MediaUtils.TYPE_ALBUM;
 			coverCacheKey = MediaStore.Audio.Albums.ALBUM_ID;
 			break;
@@ -480,8 +479,6 @@ public class MediaAdapter
 			holder.arrow = (ImageView)view.findViewById(R.id.arrow);
 			holder.cover = (LazyCoverView)view.findViewById(R.id.cover);
 			holder.arrow.setOnClickListener(this);
-			holder.text.setOnClickListener(this);
-			holder.cover.setOnClickListener(this);
 
 			holder.divider.setVisibility(mExpandable ? View.VISIBLE : View.GONE);
 			holder.arrow.setVisibility(mExpandable ? View.VISIBLE : View.GONE);
@@ -512,9 +509,7 @@ public class MediaAdapter
 			holder.title = title;
 		}
 
-		if (mCoverCacheType != MediaUtils.TYPE_INVALID) {
-			holder.cover.setCover(mCoverCacheType, cacheId);
-		}
+		holder.cover.setCover(mCoverCacheType, cacheId, holder.title);
 
 		return view;
 	}
@@ -576,6 +571,9 @@ public class MediaAdapter
 		return mSortMode;
 	}
 
+	/**
+	 * Creates an intent to dispatch
+	 */
 	@Override
 	public Intent createData(View view)
 	{
@@ -588,17 +586,16 @@ public class MediaAdapter
 		return intent;
 	}
 
+	/**
+	 * Callback of array clicks (item clicks are handled in LibraryPagerAdapter)
+	 */
 	@Override
 	public void onClick(View view)
 	{
 		int id = view.getId();
 		view = (View)view.getParent(); // get view of linear layout, not the click consumer
 		Intent intent = createData(view);
-		if (id == R.id.arrow) {
-			mActivity.onItemExpanded(intent);
-		} else {
-			mActivity.onItemClicked(intent);
-		}
+		mActivity.onItemExpanded(intent);
 	}
 
 	@Override

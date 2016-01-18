@@ -57,6 +57,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 import java.lang.Math;
@@ -336,6 +337,10 @@ public final class PlaybackService extends Service
 	 * The SensorManager service.
 	 */
 	private SensorManager mSensorManager;
+	/**
+	 * A remote control client implementation
+	 */
+	private RemoteControl.Client mRemoteControlClient;
 
 	SongTimeline mTimeline;
 	private Song mCurrentSong;
@@ -408,6 +413,10 @@ public final class PlaybackService extends Service
 	 */
 	private int mVolumeDuringDucking;
 	/**
+	 *
+	 */
+	private boolean mIgnoreAudioFocusLoss;
+	/**
 	 * TRUE if the readahead feature is enabled
 	 */
 	private boolean mReadaheadEnabled;
@@ -472,6 +481,7 @@ public final class PlaybackService extends Service
 		mReplayGainUntaggedDeBump = settings.getInt(PrefKeys.REPLAYGAIN_UNTAGGED_DEBUMP, PrefDefaults.REPLAYGAIN_UNTAGGED_DEBUMP);
 
 		mVolumeDuringDucking = settings.getInt(PrefKeys.VOLUME_DURING_DUCKING, PrefDefaults.VOLUME_DURING_DUCKING);
+		mIgnoreAudioFocusLoss = settings.getBoolean(PrefKeys.IGNORE_AUDIOFOCUS_LOSS, PrefDefaults.IGNORE_AUDIOFOCUS_LOSS);
 		refreshDuckingValues();
 
 		mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
@@ -489,7 +499,8 @@ public final class PlaybackService extends Service
 
 		getContentResolver().registerContentObserver(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, true, mObserver);
 
-		RemoteControl.registerRemote(this, mAudioManager);
+		mRemoteControlClient = new RemoteControl().getClient(this);
+		mRemoteControlClient.initializeRemote();
 
 		mLooper = thread.getLooper();
 		mHandler = new Handler(mLooper, this);
@@ -569,8 +580,6 @@ public final class PlaybackService extends Service
 				stopForeground(true); // sometimes required to clear notification
 				updateNotification();
 			}
-
-			MediaButtonReceiver.registerMediaButton(this);
 		}
 
 		return START_NOT_STICKY;
@@ -607,6 +616,9 @@ public final class PlaybackService extends Service
 
 		if (mSensorManager != null)
 			mSensorManager.unregisterListener(this);
+
+		if (mRemoteControlClient != null)
+			mRemoteControlClient.unregisterRemote();
 
 		super.onDestroy();
 	}
@@ -826,8 +838,9 @@ public final class PlaybackService extends Service
 			mScrobble = settings.getBoolean(PrefKeys.SCROBBLE, PrefDefaults.SCROBBLE);
 		} else if (PrefKeys.MEDIA_BUTTON.equals(key) || PrefKeys.MEDIA_BUTTON_BEEP.equals(key)) {
 			MediaButtonReceiver.reloadPreference(this);
+			mRemoteControlClient.initializeRemote();
 		} else if (PrefKeys.COVER_ON_LOCKSCREEN.equals(key)) {
-			RemoteControl.reloadPreference();
+			mRemoteControlClient.reloadPreference();
 		} else if (PrefKeys.USE_IDLE_TIMEOUT.equals(key) || PrefKeys.IDLE_TIMEOUT.equals(key)) {
 			mIdleTimeout = settings.getBoolean(PrefKeys.USE_IDLE_TIMEOUT, PrefDefaults.USE_IDLE_TIMEOUT) ? settings.getInt(PrefKeys.IDLE_TIMEOUT, PrefDefaults.IDLE_TIMEOUT) : 0;
 			userActionTriggered();
@@ -869,6 +882,8 @@ public final class PlaybackService extends Service
 		} else if (PrefKeys.VOLUME_DURING_DUCKING.equals(key)) {
 			mVolumeDuringDucking = settings.getInt(PrefKeys.VOLUME_DURING_DUCKING, PrefDefaults.VOLUME_DURING_DUCKING);
 			refreshDuckingValues();
+		} else if (PrefKeys.IGNORE_AUDIOFOCUS_LOSS.equals(key)) {
+			mIgnoreAudioFocusLoss = settings.getBoolean(PrefKeys.IGNORE_AUDIOFOCUS_LOSS, PrefDefaults.IGNORE_AUDIOFOCUS_LOSS);
 		} else if (PrefKeys.ENABLE_READAHEAD.equals(key)) {
 			mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
 		} else if (PrefKeys.AUTOPLAYLIST_PLAYCOUNTS.equals(key)) {
@@ -965,7 +980,7 @@ public final class PlaybackService extends Service
 					mMediaPlayer.start();
 
 				if (mNotificationMode != NEVER)
-					startForeground(NOTIFICATION_ID, createNotification(mCurrentSong, mState));
+					startForeground(NOTIFICATION_ID, createNotification(mCurrentSong, mState, mNotificationMode));
 
 				mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
@@ -1047,7 +1062,7 @@ public final class PlaybackService extends Service
 		if (mReadaheadEnabled)
 			triggerReadAhead();
 
-		RemoteControl.updateRemote(this, mCurrentSong, mState, mForceNotificationVisible);
+		mRemoteControlClient.updateRemote(mCurrentSong, mState, mForceNotificationVisible);
 
 		if (mStockBroadcast)
 			stockMusicBroadcast();
@@ -1117,7 +1132,7 @@ public final class PlaybackService extends Service
 	private void updateNotification()
 	{
 		if ((mForceNotificationVisible || mNotificationMode == ALWAYS || mNotificationMode == WHEN_PLAYING && (mState & FLAG_PLAYING) != 0) && mCurrentSong != null)
-			mNotificationManager.notify(NOTIFICATION_ID, createNotification(mCurrentSong, mState));
+			mNotificationManager.notify(NOTIFICATION_ID, createNotification(mCurrentSong, mState, mNotificationMode));
 		else
 			mNotificationManager.cancel(NOTIFICATION_ID);
 	}
@@ -1167,7 +1182,8 @@ public final class PlaybackService extends Service
 	public int pause()
 	{
 		synchronized (mStateLock) {
-			int state = updateState(mState & ~FLAG_PLAYING);
+			mTransientAudioLoss = false; // do not resume playback as this pause was user initiated
+			int state = updateState(mState & ~FLAG_PLAYING & ~FLAG_DUCKING);
 			userActionTriggered();
 			return state;
 		}
@@ -1408,9 +1424,7 @@ public final class PlaybackService extends Service
 
 			if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)) {
 				if (mHeadsetPause) {
-					unsetFlag(FLAG_PLAYING);
-					// Treat any pending transient audio loss as permanent
-					mTransientAudioLoss = false;
+					pause();
 				}
 			} else if (Intent.ACTION_SCREEN_ON.equals(action)) {
 				userActionTriggered();
@@ -2052,7 +2066,7 @@ public final class PlaybackService extends Service
 	 * @param song The Song to display information about.
 	 * @param state The state. Determines whether to show paused or playing icon.
 	 */
-	public Notification createNotification(Song song, int state)
+	public Notification createNotification(Song song, int state, int mode)
 	{
 		boolean playing = (state & FLAG_PLAYING) != 0;
 
@@ -2089,10 +2103,13 @@ public final class PlaybackService extends Service
 		views.setOnClickPendingIntent(R.id.next, PendingIntent.getService(this, 0, next, 0));
 		expanded.setOnClickPendingIntent(R.id.next, PendingIntent.getService(this, 0, next, 0));
 
+		int closeButtonVisibility = (mode == WHEN_PLAYING) ? View.VISIBLE : View.INVISIBLE;
 		Intent close = new Intent(PlaybackService.ACTION_CLOSE_NOTIFICATION);
 		close.setComponent(service);
 		views.setOnClickPendingIntent(R.id.close, PendingIntent.getService(this, 0, close, 0));
+		views.setViewVisibility(R.id.close, closeButtonVisibility);
 		expanded.setOnClickPendingIntent(R.id.close, PendingIntent.getService(this, 0, close, 0));
+		expanded.setViewVisibility(R.id.close, closeButtonVisibility);
 
 		views.setTextViewText(R.id.title, song.title);
 		views.setTextViewText(R.id.artist, song.artist);
@@ -2128,6 +2145,16 @@ public final class PlaybackService extends Service
 	public void onAudioFocusChange(int type)
 	{
 		Log.d("VanillaMusic", "audio focus change: " + type);
+
+		// Rewrite permanent focus loss into can_duck
+		if (mIgnoreAudioFocusLoss) {
+			switch (type) {
+				case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+				case AudioManager.AUDIOFOCUS_LOSS:
+					type = AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
+			}
+		}
+
 		switch (type) {
 		case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
 		case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:

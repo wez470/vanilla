@@ -18,16 +18,21 @@
 package ch.blinkenlights.android.vanilla;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.LruCache;
 import android.widget.ImageView;
 
 /**
@@ -63,6 +68,10 @@ public class LazyCoverView extends ImageView
 	 */
 	private static CoverCache sCoverCache;
 	/**
+	 * Our private LRU cache
+	 */
+	private static BitmapLruCache sBitmapLruCache;
+	/**
 	 * The cover key we are expected to draw
 	 */
 	private CoverCache.CoverKey mExpectedKey;
@@ -71,11 +80,13 @@ public class LazyCoverView extends ImageView
 	 * Cover message we are passing around using mHandler
 	 */
 	private static class CoverMsg {
-		public CoverCache.CoverKey key;
-		public LazyCoverView view; // The view we are updating
-		CoverMsg(CoverCache.CoverKey key, LazyCoverView view) {
+		public CoverCache.CoverKey key; // A cache key identifying this RPC
+		public LazyCoverView view;      // The view we are updating
+		public String title;            // The title of this view, used for Initial-Covers
+		CoverMsg(CoverCache.CoverKey key, LazyCoverView view, String title) {
 			this.key = key;
 			this.view = view;
+			this.title = title;
 		}
 		/**
 		 * Returns true if the view still requires updating
@@ -97,8 +108,11 @@ public class LazyCoverView extends ImageView
 		if (sCoverCache == null) {
 			sCoverCache = new CoverCache(mContext);
 		}
+		if (sBitmapLruCache == null) {
+			sBitmapLruCache = new BitmapLruCache(6*1024*1024);
+		}
 		if (sFallbackBitmap == null) {
-			sFallbackBitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.fallback_cover);
+			sFallbackBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.fallback_cover);
 		}
 		if (sUiHandler == null) {
 			sUiHandler = new Handler(this);
@@ -114,7 +128,6 @@ public class LazyCoverView extends ImageView
 	/**
 	 * mHandler and mUiHandler callbacks
 	 */
-	private static final int MSG_READ_COVER   = 60;
 	private static final int MSG_CREATE_COVER = 61;
 	private static final int MSG_DRAW_COVER   = 62;
 
@@ -127,35 +140,26 @@ public class LazyCoverView extends ImageView
 		}
 
 		switch (message.what) {
-			case MSG_READ_COVER: {
-				// Cover was not in in-memory cache: Try to read from disk
-				Bitmap bitmap = sCoverCache.getStoredCover(payload.key);
-				if (bitmap != null) {
-					// Got it: promote to memory cache and let ui thread draw it
-					sCoverCache.cacheCover(payload.key, bitmap);
-					sUiHandler.sendMessage(sUiHandler.obtainMessage(MSG_DRAW_COVER, payload));
-				} else {
-					sHandler.sendMessageDelayed(sHandler.obtainMessage(MSG_CREATE_COVER, payload), 80);
-				}
-				break;
-			}
 			case MSG_CREATE_COVER: {
 				// This message was sent due to a cache miss, but the cover might got cached in the meantime
-				Bitmap bitmap = sCoverCache.getCachedCover(payload.key);
+				Bitmap bitmap = sBitmapLruCache.get(payload.key);
 				if (bitmap == null) {
-					Song song = MediaUtils.getSongByTypeId(mContext.getContentResolver(), payload.key.mediaType, payload.key.mediaId);
-					if (song != null) {
-						// we got a song, try to fetch a cover
-						// will also populate all caches if a cover was found
-						bitmap = sCoverCache.getCoverFromSong(payload.key, song);
+					if (payload.key.mediaType == MediaUtils.TYPE_ALBUM) {
+						// We only display real covers for queries using the album id as key
+						Song song = MediaUtils.getSongByTypeId(mContext.getContentResolver(), payload.key.mediaType, payload.key.mediaId);
+						if (song != null) {
+							bitmap = song.getSmallCover(mContext);
+						}
+					} else {
+						bitmap = drawCoverFromString(payload.title);
 					}
 					if (bitmap == null) {
-						// song has no cover: return a failback one and store
-						// it (only) in memory
+						// item has no cover: return a failback
 						bitmap = sFallbackBitmap;
-						sCoverCache.cacheCover(payload.key, bitmap);
 					}
 				}
+				// bitmap is non null: store in LRU cache and draw it
+				sBitmapLruCache.put(payload.key, bitmap);
 				sUiHandler.sendMessage(sUiHandler.obtainMessage(MSG_DRAW_COVER, payload));
 				break;
 			}
@@ -177,12 +181,11 @@ public class LazyCoverView extends ImageView
 	 * @param type The Media type
 	 * @param id The id of this media type to query
 	 */
-	public void setCover(int type, long id) {
+	public void setCover(int type, long id, String title) {
 		mExpectedKey = new CoverCache.CoverKey(type, id, CoverCache.SIZE_SMALL);
 		if (drawFromCache(mExpectedKey, false) == false) {
-			CoverMsg payload = new CoverMsg(mExpectedKey, this);
-			// We put the message at the queue start to out-race slow CREATE RPC's
-			sHandler.sendMessage(sHandler.obtainMessage(MSG_READ_COVER, payload));
+			CoverMsg payload = new CoverMsg(mExpectedKey, this, title);
+			sHandler.sendMessage(sHandler.obtainMessage(MSG_CREATE_COVER, payload));
 		}
 	}
 
@@ -194,7 +197,7 @@ public class LazyCoverView extends ImageView
 	 */
 	public boolean drawFromCache(CoverCache.CoverKey key, boolean fadeIn) {
 		boolean cacheHit = true;
-		Bitmap bitmap = sCoverCache.getCachedCover(key);
+		Bitmap bitmap = sBitmapLruCache.get(key);
 		if (bitmap == null) {
 			cacheHit = false;
 		}
@@ -211,6 +214,74 @@ public class LazyCoverView extends ImageView
 		}
 
 		return cacheHit;
+	}
+
+	/**
+	 * Draws a placeholder cover from given title string
+	 *
+	 * @param title A text string to use in the cover
+	 * @return bitmap The drawn bitmap
+	 */
+	private Bitmap drawCoverFromString(String title) {
+		if (title == null)
+			return null;
+
+		final int canvasSize = CoverCache.SIZE_SMALL;
+		final float textSize = canvasSize * 0.45f;
+
+		title = title.replaceFirst("(?i)^The ", ""); // 'The\s' shall not be a part of the string we are drawing.
+		String subText = (title+"  ").substring(0,2);
+
+		Bitmap bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(bitmap);
+		Paint paint = new Paint();
+
+		// Picks a semi-random color from tiles_colors.xml
+		TypedArray colors = getResources().obtainTypedArray(R.array.letter_tile_colors);
+		int color = colors.getColor(Math.abs(title.hashCode()) % colors.length(), 0);
+		colors.recycle();
+		paint.setColor(color);
+
+		paint.setStyle(Paint.Style.FILL);
+		canvas.drawPaint(paint);
+
+		paint.setARGB(255, 255, 255, 255);
+		paint.setAntiAlias(true);
+		paint.setTextSize(textSize);
+
+		Rect bounds = new Rect();
+		paint.getTextBounds(subText, 0, subText.length(), bounds);
+
+		canvas.drawText(subText, (canvasSize/2f)-bounds.exactCenterX(), (canvasSize/2f)-bounds.exactCenterY(), paint);
+		return bitmap;
+
+	}
+
+
+	/**
+	* A LRU cache implementation, using the CoverKey as key to store Bitmap objects
+	*
+	* Note that the implementation does not override create() in order to enable
+	* the use of fetch-if-cached functions: createBitmap() is therefore called
+	* by CoverCache itself.
+	*/
+	private static class BitmapLruCache extends LruCache<CoverCache.CoverKey, Bitmap> {
+		/**
+		 * Creates a new in-memory LRU cache
+		 *
+		 * @param size the lru cache size in bytes
+		 */
+		public BitmapLruCache(int size) {
+			super(size);
+		}
+
+		/**
+		 * Returns the cache size in bytes, not objects
+		 */
+		@Override
+		protected int sizeOf(CoverCache.CoverKey key, Bitmap value) {
+			return value.getByteCount();
+		}
 	}
 
 }
