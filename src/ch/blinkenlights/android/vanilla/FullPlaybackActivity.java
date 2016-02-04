@@ -372,7 +372,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 		menu.add(0, MENU_ENQUEUE_ALBUM, 0, R.string.enqueue_current_album).setIcon(R.drawable.ic_menu_add);
 		menu.add(0, MENU_ENQUEUE_ARTIST, 0, R.string.enqueue_current_artist).setIcon(R.drawable.ic_menu_add);
 		menu.add(0, MENU_ENQUEUE_GENRE, 0, R.string.enqueue_current_genre).setIcon(R.drawable.ic_menu_add);
-		mFavourites = menu.add(0, MENU_SONG_FAVORITE, 0, R.string.add_to_favorites).setIcon(R.drawable.ic_menu_add).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		mFavourites = menu.add(0, MENU_SONG_FAVORITE, 0, R.string.add_to_favorites).setIcon(R.drawable.empty).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);
 
 		// ensure that mFavourites is updated
@@ -703,8 +703,11 @@ public class FullPlaybackActivity extends PlaybackActivity
 			}
 			break;
 		case MSG_COMMIT_FAVOURITE_INFO:
-			if (mFavourites != null)
-				mFavourites.setIcon((boolean)message.obj ? R.drawable.ic_menu_close_clear_cancel : R.drawable.ic_menu_add);
+			if (mFavourites != null) {
+				boolean found = (boolean)message.obj;
+				mFavourites.setIcon(found ? R.drawable.btn_rating_star_on_mtrl_alpha: R.drawable.btn_rating_star_off_mtrl_alpha);
+				mFavourites.setTitle(found ? R.string.remove_from_favorites : R.string.add_to_favorites);
+			}
 			break;
 		default:
 			return super.handleMessage(message);
