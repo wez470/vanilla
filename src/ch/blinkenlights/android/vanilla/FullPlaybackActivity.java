@@ -318,7 +318,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mCurrentSong = song;
 		updateElapsedTime();
 
-		mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_FAVOURITE_INFO, song));
+		mHandler.sendEmptyMessage(MSG_LOAD_FAVOURITE_INFO);
 
 		// All quick UI updates are done: Time to update the cover
 		// and parse additional info
@@ -374,6 +374,9 @@ public class FullPlaybackActivity extends PlaybackActivity
 		menu.add(0, MENU_ENQUEUE_GENRE, 0, R.string.enqueue_current_genre).setIcon(R.drawable.ic_menu_add);
 		mFavourites = menu.add(0, MENU_SONG_FAVORITE, 0, R.string.add_to_favorites).setIcon(R.drawable.ic_menu_add).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		menu.add(0, MENU_SHOW_QUEUE, 0, R.string.show_queue);
+
+		// ensure that mFavourites is updated
+		mHandler.sendEmptyMessage(MSG_LOAD_FAVOURITE_INFO);
 		return true;
 	}
 
@@ -404,7 +407,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 				playlistTask.audioIds.add(song.id);
 				int action = Playlist.isInPlaylist(getContentResolver(), playlistId, song) ? MSG_REMOVE_FROM_PLAYLIST : MSG_ADD_TO_PLAYLIST;
 				mHandler.sendMessage(mHandler.obtainMessage(action, playlistTask));
-				mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_FAVOURITE_INFO, song));
+				mHandler.sendEmptyMessage(MSG_LOAD_FAVOURITE_INFO);
 			}
 			break;
 		case MENU_DELETE:
@@ -694,8 +697,10 @@ public class FullPlaybackActivity extends PlaybackActivity
 			updateElapsedTime();
 			break;
 		case MSG_LOAD_FAVOURITE_INFO:
-			boolean found = Playlist.isInPlaylist(getContentResolver(), Playlist.getFavouritesId(this, false), (Song)message.obj);
-			mUiHandler.sendMessage(mUiHandler.obtainMessage(MSG_COMMIT_FAVOURITE_INFO, found));
+			if (mCurrentSong != null) {
+				boolean found = Playlist.isInPlaylist(getContentResolver(), Playlist.getFavouritesId(this, false), mCurrentSong);
+				mUiHandler.sendMessage(mUiHandler.obtainMessage(MSG_COMMIT_FAVOURITE_INFO, found));
+			}
 			break;
 		case MSG_COMMIT_FAVOURITE_INFO:
 			if (mFavourites != null)
