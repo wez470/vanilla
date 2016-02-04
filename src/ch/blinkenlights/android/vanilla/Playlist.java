@@ -232,13 +232,13 @@ public class Playlist {
 	}
 
 	/**
-	 * Returns the ID of the 'favourites' playlist.
+	 * Returns the ID of the 'favorites' playlist.
 	 *
 	 * @param context The Context to use
 	 * @param create Create the playlist if it does not exist
 	 * @return the id of the playlist, -1 on error
 	 */
-	public static long getFavouritesId(Context context, boolean create) {
+	public static long getFavoritesId(Context context, boolean create) {
 		String playlistName = context.getString(R.string.playlist_favorites);
 		long playlistId = getPlaylist(context.getContentResolver(), playlistName);
 
