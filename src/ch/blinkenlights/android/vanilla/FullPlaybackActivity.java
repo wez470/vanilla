@@ -300,8 +300,6 @@ public class FullPlaybackActivity extends PlaybackActivity
 	@Override
 	protected void onSongChange(Song song)
 	{
-		super.onSongChange(song);
-
 		setDuration(song == null ? 0 : song.duration);
 
 		if (mTitle != null) {
@@ -322,9 +320,12 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_FAVOURITE_INFO, song));
 
+		// All quick UI updates are done: Time to update the cover
+		// and parse additional info
 		if (mExtraInfoVisible) {
 			mHandler.sendEmptyMessage(MSG_LOAD_EXTRA_INFO);
 		}
+		super.onSongChange(song);
 	}
 
 	/**
