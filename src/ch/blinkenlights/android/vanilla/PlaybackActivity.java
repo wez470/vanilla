@@ -79,8 +79,6 @@ public abstract class PlaybackActivity extends Activity
 	protected ImageButton mEndButton;
 
 	protected int mState;
-	private long mLastStateEvent;
-	private long mLastSongEvent;
 
 	@Override
 	public void onCreate(Bundle state)
@@ -174,7 +172,7 @@ public abstract class PlaybackActivity extends Activity
 	@Override
 	public void shiftCurrentSong(int delta)
 	{
-		setSong(PlaybackService.get(this).shiftCurrentSong(delta));
+		PlaybackService.get(this).shiftCurrentSong(delta);
 	}
 
 	public void playPause()
@@ -183,12 +181,11 @@ public abstract class PlaybackActivity extends Activity
 		int state = service.playPause();
 		if ((state & PlaybackService.FLAG_ERROR) != 0)
 			showToast(service.getErrorMessage(), Toast.LENGTH_LONG);
-		setState(state);
 	}
 
 	private void rewindCurrentSong()
 	{
-		setSong(PlaybackService.get(this).rewindCurrentSong());
+		PlaybackService.get(this).rewindCurrentSong();
 	}
 
 
@@ -235,8 +232,6 @@ public abstract class PlaybackActivity extends Activity
 
 	protected void setState(final int state)
 	{
-		mLastStateEvent = System.nanoTime();
-
 		if (mState != state) {
 			final int toggled = mState ^ state;
 			mState = state;
@@ -250,14 +245,6 @@ public abstract class PlaybackActivity extends Activity
 		}
 	}
 
-	/**
-	 * Called by PlaybackService to update the state.
-	 */
-	public void setState(long uptime, int state)
-	{
-		if (uptime >= mLastStateEvent)
-			setState(state);
-	}
 
 	/**
 	 * Sets up components when the PlaybackService is initialized and available to
@@ -283,7 +270,6 @@ public abstract class PlaybackActivity extends Activity
 
 	protected void setSong(final Song song)
 	{
-		mLastSongEvent = System.nanoTime();
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run()
@@ -304,14 +290,6 @@ public abstract class PlaybackActivity extends Activity
 		return fs_start;
 	}
 
-	/**
-	 * Called by PlaybackService to update the current song.
-	 */
-	public void setSong(long uptime, Song song)
-	{
-		if (uptime >= mLastSongEvent)
-			setSong(song);
-	}
 
 	/**
 	 * Called by PlaybackService to update an active song (next, previous, or
@@ -514,7 +492,7 @@ public abstract class PlaybackActivity extends Activity
 	 */
 	public void cycleShuffle()
 	{
-		setState(PlaybackService.get(this).cycleShuffle());
+		PlaybackService.get(this).cycleShuffle();
 	}
 
 	/**
@@ -522,7 +500,7 @@ public abstract class PlaybackActivity extends Activity
 	 */
 	public void cycleFinishAction()
 	{
-		setState(PlaybackService.get(this).cycleFinishAction());
+		PlaybackService.get(this).cycleFinishAction();
 	}
 
 	/**
@@ -584,10 +562,11 @@ public abstract class PlaybackActivity extends Activity
 	{
 		int group = item.getGroupId();
 		int id = item.getItemId();
+
 		if (group == GROUP_SHUFFLE)
-			setState(PlaybackService.get(this).setShuffleMode(id));
+			PlaybackService.get(this).setShuffleMode(id);
 		else if (group == GROUP_FINISH)
-			setState(PlaybackService.get(this).setFinishAction(id));
+			PlaybackService.get(this).setFinishAction(id);
 		return true;
 	}
 }

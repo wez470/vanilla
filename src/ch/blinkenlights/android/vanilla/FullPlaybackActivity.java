@@ -723,7 +723,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	public void onClick(View view)
 	{
 		if (view == mOverlayText && (mState & PlaybackService.FLAG_EMPTY_QUEUE) != 0) {
-			setState(PlaybackService.get(this).setFinishAction(SongTimeline.FINISH_RANDOM));
+			PlaybackService.get(this).setFinishAction(SongTimeline.FINISH_RANDOM);
 		} else if (view == mCoverView) {
 			performAction(mCoverPressAction);
 		} else if (view.getId() == R.id.info_table) {

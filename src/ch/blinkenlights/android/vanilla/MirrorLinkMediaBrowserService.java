@@ -733,12 +733,12 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 		// updatePlaybackState(null);
 	}
 
-	public void setState(long uptime, int state) {
+	public void setState(int state) {
 		mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_STATE, null));
 		// updatePlaybackState(null);
 	}
 
-	public void setSong(long uptime, Song song) {
+	public void setSong(Song song) {
 		mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_STATE, null));
 //		updatePlaybackState(null);
 		if(song == null) {
@@ -773,7 +773,7 @@ public class MirrorLinkMediaBrowserService extends MediaBrowserService implement
 
 	public void onMediaChanged() {
 		if(PlaybackService.hasInstance()) {
-			setSong(0,PlaybackService.get(this).getSong(0));
+			setSong(PlaybackService.get(this).getSong(0));
 		}
 
 	}

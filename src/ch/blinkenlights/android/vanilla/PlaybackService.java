@@ -957,7 +957,7 @@ public final class PlaybackService extends Service
 
 		if (state != oldState) {
 			mHandler.sendMessage(mHandler.obtainMessage(MSG_PROCESS_STATE, oldState, state));
-			mHandler.sendMessage(mHandler.obtainMessage(MSG_BROADCAST_CHANGE, state, 0, new TimestampedObject(null)));
+			mHandler.sendMessage(mHandler.obtainMessage(MSG_BROADCAST_CHANGE, state, 0, null));
 		}
 
 		return state;
@@ -1033,28 +1033,28 @@ public final class PlaybackService extends Service
 		}
 	}
 
-	private void broadcastChange(int state, Song song, long uptime)
+	private void broadcastChange(int state, Song song)
 	{
 		if (state != -1) {
 			ArrayList<PlaybackActivity> list = sActivities;
 			for (int i = list.size(); --i != -1; )
-				list.get(i).setState(uptime, state);
+				list.get(i).setState(state);
 
 			MirrorLinkMediaBrowserService service = sMirrorLinkMediaBrowserService;
 			if(service != null) {
-				service.setState(uptime, state);
+				service.setState(state);
 			}
 		}
 
 		if (song != null) {
 			ArrayList<PlaybackActivity> list = sActivities;
 			for (int i = list.size(); --i != -1; )
-				list.get(i).setSong(uptime, song);
+				list.get(i).setSong(song);
 		}
 
 		MirrorLinkMediaBrowserService service = sMirrorLinkMediaBrowserService;
 		if(service != null) {
-			service.setSong(uptime, song);
+			service.setSong(song);
 		}
 
 		updateWidgets();
@@ -1308,7 +1308,7 @@ public final class PlaybackService extends Service
 
 		mMediaPlayerInitialized = false;
 		mHandler.sendMessage(mHandler.obtainMessage(MSG_PROCESS_SONG, song));
-		mHandler.sendMessage(mHandler.obtainMessage(MSG_BROADCAST_CHANGE, -1, 0, new TimestampedObject(song)));
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_BROADCAST_CHANGE, -1, 0, song));
 		return song;
 	}
 
@@ -1529,8 +1529,7 @@ public final class PlaybackService extends Service
 			processNewState(message.arg1, message.arg2);
 			break;
 		case MSG_BROADCAST_CHANGE:
-			TimestampedObject tso = (TimestampedObject)message.obj;
-			broadcastChange(message.arg1, (Song)tso.object, tso.uptime);
+			broadcastChange(message.arg1, (Song)message.obj);
 			break;
 		case MSG_ENTER_SLEEP_STATE:
 			enterSleepState();
