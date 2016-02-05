@@ -431,7 +431,9 @@ public final class CoverView extends View implements Handler.Callback {
 			}
 		}
 
-		resetScroll();
+		// Ensure that view is in sane state
+		if (!mScrolling)
+			resetScroll();
 	}
 
 	/**
