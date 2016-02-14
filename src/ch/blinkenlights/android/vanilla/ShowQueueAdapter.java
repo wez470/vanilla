@@ -18,6 +18,8 @@
 package ch.blinkenlights.android.vanilla;
 
 import android.content.Context;
+import android.content.Intent;
+
 import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,16 +35,19 @@ import android.text.SpannableStringBuilder;
 
 public class ShowQueueAdapter
 	extends ArrayAdapter<Song>
+	implements LibraryAdapter
 	 {
 	
 	private int mResource;
 	private int mHighlightRow;
 	private Context mContext;
+	private PlaybackService mService;
 
 	public ShowQueueAdapter(Context context, int resource) {
 		super(context, resource);
 		mResource = resource;
 		mContext = context;
+		mService = PlaybackService.get(context);
 		mHighlightRow = -1;
 	}
 
@@ -79,8 +84,65 @@ public class ShowQueueAdapter
 		}
 
 		row.highlightRow(position == mHighlightRow);
-
+		row.setId(position);
 		return row;
+	}
+
+	@Override
+	public Intent createData(View view)
+	{
+		Song song = mService.getSongByQueuePosition(view.getId());
+		Intent intent = new Intent();
+		intent.putExtra(LibraryAdapter.DATA_TYPE, MediaUtils.TYPE_SONG);
+		intent.putExtra(LibraryAdapter.DATA_ID, song.id);
+		intent.putExtra(LibraryAdapter.DATA_TITLE, song.title);
+		intent.putExtra(LibraryAdapter.DATA_EXPANDABLE, false);
+		return intent;
+	}
+
+	@Override
+	public void commitQuery(Object data)
+	{
+		int stotal = mService.getTimelineLength();   /* Total number of songs in queue */
+		int spos   = mService.getTimelinePosition(); /* Current position in queue      */
+		clear();                    /* Flush all existing entries...  */
+		highlightRow(spos);         /* and highlight current position */
+		for(int i=0 ; i<stotal; i++) {
+			add(mService.getSongByQueuePosition(i));
+		}
+	}
+
+	@Override
+	public Object query() {
+		return null;
+	}
+
+	@Override
+	public void setFilter(String filter)
+	{
+	}
+
+	@Override
+	public Limiter buildLimiter(long id)
+	{
+		return null;
+	}
+
+	@Override
+	public Limiter getLimiter()
+	{
+		return null;
+	}
+
+	@Override
+	public void setLimiter(Limiter limiter)
+	{
+	}
+
+	@Override
+	public int getMediaType()
+	{
+		return MediaUtils.TYPE_QUEUE;
 	}
 
 }

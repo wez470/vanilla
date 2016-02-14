@@ -62,18 +62,18 @@ public class LibraryPagerAdapter
 	 * The number of unique list types. The number of visible lists may be
 	 * smaller.
 	 */
-	public static final int MAX_ADAPTER_COUNT = 6;
+	public static final int MAX_ADAPTER_COUNT = 7;
 	/**
 	 * The human-readable title for each list. The positions correspond to the
 	 * MediaUtils ids, so e.g. TITLES[MediaUtils.TYPE_SONG] = R.string.songs
 	 */
 	public static final int[] TITLES = { R.string.artists, R.string.albums, R.string.songs,
-	                                     R.string.playlists, R.string.genres, R.string.files };
+	                                     R.string.playlists, R.string.genres, R.string.files, R.string.files };
 	/**
 	 * Default tab order.
 	 */
 	public static final int[] DEFAULT_ORDER = { MediaUtils.TYPE_ARTIST, MediaUtils.TYPE_ALBUM, MediaUtils.TYPE_SONG,
-	                                            MediaUtils.TYPE_PLAYLIST, MediaUtils.TYPE_GENRE, MediaUtils.TYPE_FILE };
+	                                            MediaUtils.TYPE_PLAYLIST, MediaUtils.TYPE_GENRE, MediaUtils.TYPE_FILE, MediaUtils.TYPE_QUEUE };
 	/**
 	 * The user-chosen tab order.
 	 */
@@ -119,6 +119,8 @@ public class LibraryPagerAdapter
 	 * The file adapter instance, also stored at mAdapters[MediaUtils.TYPE_FILE].
 	 */
 	private FileSystemAdapter mFilesAdapter;
+	
+	private ShowQueueAdapter mQueueAdapter;
 	/**
 	 * LRU cache holding the last scrolling position of all adapter views
 	 */
@@ -341,6 +343,9 @@ public class LibraryPagerAdapter
 				adapter = mFilesAdapter = new FileSystemAdapter(activity, mPendingFileLimiter);
 				mPendingFileLimiter = null;
 				break;
+			case MediaUtils.TYPE_QUEUE:
+				adapter = mQueueAdapter = new ShowQueueAdapter(activity, R.layout.draggable_row);
+				break;
 			default:
 				throw new IllegalArgumentException("Invalid media type: " + type);
 			}
@@ -357,7 +362,7 @@ public class LibraryPagerAdapter
 				view.addHeaderView(header);
 			}
 			view.setAdapter(adapter);
-			if (type != MediaUtils.TYPE_FILE)
+			if (type != MediaUtils.TYPE_FILE && type != MediaUtils.TYPE_QUEUE)
 				loadSortOrder((MediaAdapter)adapter);
 			view.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
 			adapter.setFilter(mFilter);

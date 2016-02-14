@@ -919,6 +919,12 @@ public class LibraryActivity
 	}
 
 	@Override
+	public void onTimelineChanged() {
+	// fixme: this is bad and should only affect the queue adapter, not all adapters!
+		mPagerAdapter.invalidateData();
+	}
+
+	@Override
 	protected void onStateChange(int state, int toggled)
 	{
 		super.onStateChange(state, toggled);

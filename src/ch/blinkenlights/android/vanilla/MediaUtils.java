@@ -77,10 +77,12 @@ public class MediaUtils {
 	 * since files have no MediaStore id and require special handling.
 	 */
 	public static final int TYPE_FILE = 5;
+	
+	public static final int TYPE_QUEUE = 6;
 	/**
 	 * The number of different valid media types.
 	 */
-	public static final int TYPE_COUNT = 6;
+	public static final int TYPE_COUNT = 7;
 
 	/**
 	 * The default sort order for media queries. First artist, then album, then

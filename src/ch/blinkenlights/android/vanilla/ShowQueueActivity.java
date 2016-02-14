@@ -195,6 +195,7 @@ public class ShowQueueActivity extends PlaybackActivity
 	 * @param scroll enable or disable jumping to the currently playing item
 	 */
 	public void refreshSongQueueList(final boolean scroll) {
+		listAdapter.commitQuery(null);
 		runOnUiThread(new Runnable(){
 			public void run() {
 				int i, stotal, spos;
