@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Adrian Ulrich <adrian@blinkenlights.ch>
+ * Copyright (C) 2015-2016 Adrian Ulrich <adrian@blinkenlights.ch>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,15 @@
 
 package ch.blinkenlights.android.vanilla;
 
+import android.app.ActivityManager;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.LruCache;
@@ -63,10 +59,6 @@ public class LazyCoverView extends ImageView
 	 * The fallback cover image resource encoded as bitmap
 	 */
 	private static Bitmap sFallbackBitmap;
-	/**
-	 * Cover LRU cache LRU cache
-	 */
-	private static CoverCache sCoverCache;
 	/**
 	 * Our private LRU cache
 	 */
@@ -105,11 +97,11 @@ public class LazyCoverView extends ImageView
 	public LazyCoverView(Context context, AttributeSet attributes) {
 		super(context, attributes);
 		mContext = context;
-		if (sCoverCache == null) {
-			sCoverCache = new CoverCache(mContext);
-		}
 		if (sBitmapLruCache == null) {
-			sBitmapLruCache = new BitmapLruCache(6*1024*1024);
+			ActivityManager am = (ActivityManager)context.getSystemService(context.ACTIVITY_SERVICE);
+			int lruSize = am.getMemoryClass() / 10; // use ~10% for LRU
+			lruSize = lruSize < 2 ? 2 : lruSize; // LRU will always be at least 2MiB
+			sBitmapLruCache = new BitmapLruCache(lruSize*1024*1024);
 		}
 		if (sFallbackBitmap == null) {
 			sFallbackBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.fallback_cover);
@@ -122,7 +114,6 @@ public class LazyCoverView extends ImageView
 			thread.start();
 			sHandler = new Handler(thread.getLooper(), this);
 		}
-
 	}
 
 	/**
@@ -151,7 +142,7 @@ public class LazyCoverView extends ImageView
 							bitmap = song.getSmallCover(mContext);
 						}
 					} else {
-						bitmap = drawCoverFromString(payload.title);
+						bitmap = CoverBitmap.generatePlaceholderCover(mContext, CoverCache.SIZE_SMALL, CoverCache.SIZE_SMALL, payload.title);
 					}
 					if (bitmap == null) {
 						// item has no cover: return a failback
@@ -215,48 +206,6 @@ public class LazyCoverView extends ImageView
 
 		return cacheHit;
 	}
-
-	/**
-	 * Draws a placeholder cover from given title string
-	 *
-	 * @param title A text string to use in the cover
-	 * @return bitmap The drawn bitmap
-	 */
-	private Bitmap drawCoverFromString(String title) {
-		if (title == null)
-			return null;
-
-		final int canvasSize = CoverCache.SIZE_SMALL;
-		final float textSize = canvasSize * 0.45f;
-
-		title = title.replaceFirst("(?i)^The ", ""); // 'The\s' shall not be a part of the string we are drawing.
-		String subText = (title+"  ").substring(0,2);
-
-		Bitmap bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.RGB_565);
-		Canvas canvas = new Canvas(bitmap);
-		Paint paint = new Paint();
-
-		// Picks a semi-random color from tiles_colors.xml
-		TypedArray colors = getResources().obtainTypedArray(R.array.letter_tile_colors);
-		int color = colors.getColor(Math.abs(title.hashCode()) % colors.length(), 0);
-		colors.recycle();
-		paint.setColor(color);
-
-		paint.setStyle(Paint.Style.FILL);
-		canvas.drawPaint(paint);
-
-		paint.setARGB(255, 255, 255, 255);
-		paint.setAntiAlias(true);
-		paint.setTextSize(textSize);
-
-		Rect bounds = new Rect();
-		paint.getTextBounds(subText, 0, subText.length(), bounds);
-
-		canvas.drawText(subText, (canvasSize/2f)-bounds.exactCenterX(), (canvasSize/2f)-bounds.exactCenterY(), paint);
-		return bitmap;
-
-	}
-
 
 	/**
 	* A LRU cache implementation, using the CoverKey as key to store Bitmap objects
