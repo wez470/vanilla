@@ -197,8 +197,9 @@ public class FullPlaybackActivity extends PlaybackActivity
 				Paint p = new Paint();
 				p.setColor(Color.CYAN);
 				canvas.drawRect(0, 0, 100, 100, p);
-				p.setColor(Color.GREEN);
-				canvas.drawRect(100, 0, 200, 100, p);
+				Paint p2 = new Paint();
+				p2.setColor(Color.GREEN);
+				canvas.drawRect(100, 0, 200, 100, p2);
 			}
 
 			@Override
