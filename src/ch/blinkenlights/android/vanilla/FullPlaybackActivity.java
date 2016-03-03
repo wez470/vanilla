@@ -27,7 +27,11 @@ import java.util.ArrayList;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.os.Build;
 import android.os.Bundle;
@@ -185,6 +189,33 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mDurationView = (TextView)findViewById(R.id.duration);
 		mSeekBar = (SeekBar)findViewById(R.id.seek_bar);
 		mSeekBar.setMax(1000);
+		mSeekBar.setPadding(0, 0, 0, 0);
+		mSeekBar.setBackground(new Drawable() {
+			@Override
+			public void draw(Canvas canvas) {
+				canvas.drawColor(Color.RED);
+				Paint p = new Paint();
+				p.setColor(Color.CYAN);
+				canvas.drawRect(0, 0, 100, 100, p);
+				p.setColor(Color.GREEN);
+				canvas.drawRect(100, 0, 200, 100, p);
+			}
+
+			@Override
+			public void setAlpha(int alpha) {
+
+			}
+
+			@Override
+			public void setColorFilter(ColorFilter colorFilter) {
+
+			}
+
+			@Override
+			public int getOpacity() {
+				return 0;
+			}
+		});
 		mSeekBar.setOnSeekBarChangeListener(this);
 		mQueuePosView = (TextView)findViewById(R.id.queue_pos);
 
