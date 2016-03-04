@@ -47,7 +47,8 @@ THE SOFTWARE.
 			android:paddingBottom="5dip"
 			android:paddingLeft="18dip"
 			android:paddingRight="18dip"
-			android:layout_weight="1" />
+			android:layout_weight="1"
+			android:thumb="@drawable/seek_arrow" />
 		<TextView
 			android:id="@+id/duration"
 			android:layout_height="wrap_content"

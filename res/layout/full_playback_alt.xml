@@ -130,7 +130,9 @@ THE SOFTWARE.
 				android:layout_gravity="center"
 				android:layout_weight="1"
 				android:paddingLeft="18dip"
-				android:paddingRight="18dip" />
+				android:paddingRight="18dip"
+				android:thumb="@drawable/seek_arrow"
+				android:progressDrawable="@android:color/transparent" />
 			<TextView
 				android:id="@+id/duration"
 				android:layout_height="wrap_content"

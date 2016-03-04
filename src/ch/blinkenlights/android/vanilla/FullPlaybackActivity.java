@@ -24,6 +24,7 @@
 package ch.blinkenlights.android.vanilla;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -190,16 +191,29 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mSeekBar = (SeekBar)findViewById(R.id.seek_bar);
 		mSeekBar.setMax(1000);
 		mSeekBar.setPadding(0, 0, 0, 0);
+		// THIS DIDNT WORK // final float COLOR_WIDTH = mSeekBar.getWidth() / 1000;
+		final float COLOR_WIDTH = 10;
+		final float COLOR_HEIGHT = 100;
+
+		// Here is where we will read in the moodbar file and populate this array of paints
+		// USE random 1000 colors for now
+		final Paint[] moodPaints = new Paint[1000];
+		Random rn = new Random();
+		for (int i = 0; i < 1000; i++)
+		{
+			moodPaints[i] = new Paint();
+			moodPaints[i].setColor(Color.rgb(rn.nextInt(256),rn.nextInt(256),rn.nextInt(256)));
+		}
+
 		mSeekBar.setBackground(new Drawable() {
 			@Override
 			public void draw(Canvas canvas) {
-				canvas.drawColor(Color.RED);
-				Paint p = new Paint();
-				p.setColor(Color.CYAN);
-				canvas.drawRect(0, 0, 100, 100, p);
-				Paint p2 = new Paint();
-				p2.setColor(Color.GREEN);
-				canvas.drawRect(100, 0, 200, 100, p2);
+				//Paint[] moodPaints = new Paint[1000];
+				Random rn = new Random();
+				for (int i = 0; i < 1000; i++)
+				{
+					canvas.drawRect(COLOR_WIDTH * i, 0 , COLOR_WIDTH * (i + 1), COLOR_HEIGHT, moodPaints[i]);
+				}
 			}
 
 			@Override
@@ -252,6 +266,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mCoverPressAction = Action.getAction(settings, PrefKeys.COVER_PRESS_ACTION, PrefDefaults.COVER_PRESS_ACTION);
 		mCoverLongPressAction = Action.getAction(settings, PrefKeys.COVER_LONGPRESS_ACTION, PrefDefaults.COVER_LONGPRESS_ACTION);
+
+		System.out.println ("== " + mSeekBar.getWidth());
 	}
 
 	@Override
