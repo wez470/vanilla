@@ -23,6 +23,8 @@
 
 package ch.blinkenlights.android.vanilla;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -34,12 +36,10 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.text.format.DateUtils;
 import android.util.Log;
-import android.content.ContentResolver;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -52,7 +52,6 @@ import android.widget.SeekBar;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
@@ -192,25 +191,18 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mSeekBar.setMax(1000);
 		mSeekBar.setPadding(0, 0, 0, 0);
 		// THIS DIDNT WORK // final float COLOR_WIDTH = mSeekBar.getWidth() / 1000;
-		final float COLOR_WIDTH = 10;
+		final float COLOR_WIDTH = 1;
 		final float COLOR_HEIGHT = 100;
 
 		// Here is where we will read in the moodbar file and populate this array of paints
-		// USE random 1000 colors for now
-		final Paint[] moodPaints = new Paint[1000];
-		Random rn = new Random();
-		for (int i = 0; i < 1000; i++)
-		{
-			moodPaints[i] = new Paint();
-			moodPaints[i].setColor(Color.rgb(rn.nextInt(256),rn.nextInt(256),rn.nextInt(256)));
-		}
+		final Paint[] moodPaints = getMoodBarColors();
 
 		mSeekBar.setBackground(new Drawable() {
 			@Override
 			public void draw(Canvas canvas) {
 				//Paint[] moodPaints = new Paint[1000];
 				Random rn = new Random();
-				for (int i = 0; i < 1000; i++)
+				for (int i = 0; i < 1000; i += 2)
 				{
 					canvas.drawRect(COLOR_WIDTH * i, 0 , COLOR_WIDTH * (i + 1), COLOR_HEIGHT, moodPaints[i]);
 				}
@@ -252,6 +244,30 @@ public class FullPlaybackActivity extends PlaybackActivity
 		setExtraInfoVisible(settings.getBoolean(PrefKeys.VISIBLE_EXTRA_INFO, PrefDefaults.VISIBLE_EXTRA_INFO));
 		setDuration(0);
 	}
+
+	Paint[] getMoodBarColors() {
+		Paint[] p = new Paint[1000];
+		try {
+			InputStream input = getResources().openRawResource(getResources().getIdentifier("test",
+					"raw", "ch.blinkenlights.android.vanilla"));
+			for(int i = 0; i < 1000; i++) {
+				int r = input.read();
+				int g = input.read();
+				int b = input.read();
+				p[i] = new Paint();
+				p[i].setColor(Color.rgb(r, g, b));
+			}
+			input.close();
+		} catch (IOException e) {
+			// TODO: Create moodbar since it doesn't exist
+			for(int i = 0; i < 1000; i++) {
+				p[i] = new Paint();
+				p[i].setColor(Color.BLACK);
+			}
+		}
+		return p;
+	}
+
 
 	@Override
 	public void onStart()
