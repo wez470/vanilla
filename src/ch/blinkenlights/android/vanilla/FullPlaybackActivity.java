@@ -70,6 +70,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	private View mControlsTop;
 	private View mControlsBottom;
 
+	private Paint[] mMoodPaints;
 	private SeekBar mSeekBar;
 	private TableLayout mInfoTable;
 	private TextView mElapsedView;
@@ -186,25 +187,23 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mControlsTop = findViewById(R.id.controls_top);
 		mElapsedView = (TextView)findViewById(R.id.elapsed);
+		mElapsedView.setPadding(5, 0, 15, 0);
 		mDurationView = (TextView)findViewById(R.id.duration);
+		mDurationView.setPadding(15, 0, 5, 0);
 		mSeekBar = (SeekBar)findViewById(R.id.seek_bar);
+		mSeekBar.setPadding(0, 5, 0, 5);
 		mSeekBar.setMax(1000);
-		mSeekBar.setPadding(0, 0, 0, 0);
-		// THIS DIDNT WORK // final float COLOR_WIDTH = mSeekBar.getWidth() / 1000;
-		final float COLOR_WIDTH = 1;
 		final float COLOR_HEIGHT = 100;
 
 		// Here is where we will read in the moodbar file and populate this array of paints
-		final Paint[] moodPaints = getMoodBarColors();
+		mMoodPaints = getMoodBarColors();
 
 		mSeekBar.setBackground(new Drawable() {
 			@Override
 			public void draw(Canvas canvas) {
-				//Paint[] moodPaints = new Paint[1000];
-				Random rn = new Random();
-				for (int i = 0; i < 1000; i += 2)
+				for (int i = 0; i < mSeekBar.getWidth(); i++)
 				{
-					canvas.drawRect(COLOR_WIDTH * i, 0 , COLOR_WIDTH * (i + 1), COLOR_HEIGHT, moodPaints[i]);
+					canvas.drawRect(i, 0 , i + 1, COLOR_HEIGHT, mMoodPaints[i * 1000 / mSeekBar.getWidth()]);
 				}
 			}
 
@@ -248,7 +247,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	Paint[] getMoodBarColors() {
 		Paint[] p = new Paint[1000];
 		try {
-			InputStream input = getResources().openRawResource(getResources().getIdentifier("test",
+			InputStream input = getResources().openRawResource(getResources().getIdentifier("mrroger",
 					"raw", "ch.blinkenlights.android.vanilla"));
 			for(int i = 0; i < 1000; i++) {
 				int r = input.read();
