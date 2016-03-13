@@ -23,11 +23,24 @@
 
 package ch.blinkenlights.android.vanilla;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -36,6 +49,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
 import android.text.format.DateUtils;
@@ -112,6 +126,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 	 * The currently playing song.
 	 */
 	private Song mCurrentSong;
+    private Song mPrevSong;
+    private boolean mRetreivingSong = false;
 
 	private String mGenre;
 	private TextView mGenreView;
@@ -196,7 +212,12 @@ public class FullPlaybackActivity extends PlaybackActivity
 		final float COLOR_HEIGHT = 100;
 
 		// Here is where we will read in the moodbar file and populate this array of paints
-		mMoodPaints = getMoodBarColors();
+        Paint[] p = new Paint[1000];
+        for(int i = 0; i < 1000; i++) {
+            p[i] = new Paint();
+            p[i].setColor(Color.BLACK);
+        }
+        mMoodPaints = p;
 
 		mSeekBar.setBackground(new Drawable() {
 			@Override
@@ -245,10 +266,17 @@ public class FullPlaybackActivity extends PlaybackActivity
 	}
 
 	Paint[] getMoodBarColors() {
+        if (mCurrentSong == mPrevSong) {
+            return mMoodPaints;
+        }
 		Paint[] p = new Paint[1000];
+        String[] pathList = mCurrentSong.path.split("/");
+        String songFileName = pathList[pathList.length - 1];
+        String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+
 		try {
-			InputStream input = getResources().openRawResource(getResources().getIdentifier("mrroger",
-					"raw", "ch.blinkenlights.android.vanilla"));
+			FileInputStream input = getApplicationContext().openFileInput(moodFileName);
+            mRetreivingSong = false;
 			for(int i = 0; i < 1000; i++) {
 				int r = input.read();
 				int g = input.read();
@@ -258,7 +286,10 @@ public class FullPlaybackActivity extends PlaybackActivity
 			}
 			input.close();
 		} catch (IOException e) {
-			// TODO: Create moodbar since it doesn't exist
+            if(mCurrentSong != null && !mRetreivingSong) {
+                new MoodbarRetreivalTask().execute(mCurrentSong.path);
+                mRetreivingSong = true;
+            }
 			for(int i = 0; i < 1000; i++) {
 				p[i] = new Paint();
 				p[i].setColor(Color.BLACK);
@@ -281,8 +312,6 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mCoverPressAction = Action.getAction(settings, PrefKeys.COVER_PRESS_ACTION, PrefDefaults.COVER_PRESS_ACTION);
 		mCoverLongPressAction = Action.getAction(settings, PrefKeys.COVER_LONGPRESS_ACTION, PrefDefaults.COVER_LONGPRESS_ACTION);
-
-		System.out.println ("== " + mSeekBar.getWidth());
 	}
 
 	@Override
@@ -291,7 +320,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 		super.onResume();
 		mPaused = false;
 		updateElapsedTime();
-	}
+    }
 
 	@Override
 	public void onPause()
@@ -378,7 +407,10 @@ public class FullPlaybackActivity extends PlaybackActivity
 			updateQueuePosition();
 		}
 
+        mPrevSong = mCurrentSong;
 		mCurrentSong = song;
+        mRetreivingSong = false;
+        mMoodPaints = getMoodBarColors();
 		updateElapsedTime();
 
 		mHandler.sendEmptyMessage(MSG_LOAD_FAVOURITE_INFO);
@@ -842,5 +874,80 @@ public class FullPlaybackActivity extends PlaybackActivity
 		}
 
 		return true;
+	}
+
+	private class MoodbarRetreivalTask extends AsyncTask<String, Void, Void> {
+		@Override
+		protected Void doInBackground(String... params) {
+			try {
+				RandomAccessFile f = new RandomAccessFile(params[0], "r");
+				byte[] songBytes = new byte[(int)f.length()];
+				f.read(songBytes);
+
+                // Get network info.  res/raw/network_config.txt must exist.  The first line contains
+                // The host name or address of the server.  The second line contains the port number. e.g.
+                // 127.0.0.1
+                // 1234
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        getApplicationContext().getResources().openRawResource(R.raw.network_config)));
+                String host = "";
+                String port = "";
+                try {
+                    host = reader.readLine().trim();
+                    port = reader.readLine().trim();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+
+				Socket clientSocket = new Socket(host, Integer.valueOf(port));
+				OutputStream outToServer = clientSocket.getOutputStream();
+				InputStream inFromServer = clientSocket.getInputStream();
+				outToServer.write(parseIntToByteArray(songBytes.length));
+				outToServer.flush();
+				outToServer.write(songBytes);
+				outToServer.flush();
+
+				byte[] moodBytes = new byte[3000];
+				int bytesRead = 0;
+				while (bytesRead != 3000) {
+					bytesRead += inFromServer.read(moodBytes, bytesRead, 3000 - bytesRead);
+				}
+
+				// Write mood file
+                String[] pathList = mCurrentSong.path.split("/");
+                String songFileName = pathList[pathList.length - 1];
+                String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+				File moodFile = new File(getApplicationContext().getFilesDir(), moodFileName);
+				FileOutputStream fos = new FileOutputStream(moodFile);
+				fos.write(moodBytes);
+				fos.flush();
+				fos.close();
+				clientSocket.close();
+
+				return null;
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		private final byte[] parseIntToByteArray(int i) {
+			byte[] b = { (byte)i,
+					(byte)(i >> 8),
+					(byte)(i >> 16),
+					(byte)(i >> 24) };
+			return b;
+		}
+
+		@Override
+		protected void onPostExecute(Void v) {
+			mMoodPaints = getMoodBarColors();
+            mSeekBar.invalidate();
+		}
 	}
 }

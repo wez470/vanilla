@@ -41,3 +41,6 @@ gradle-wrapper.properties
 *.iml
 out
 .settings/
+
+# IP and Port config
+res/raw/network_config.txt
