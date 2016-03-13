@@ -287,8 +287,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 			input.close();
 		} catch (IOException e) {
             if(mCurrentSong != null && !mRetreivingSong) {
-                new MoodbarRetreivalTask().execute(mCurrentSong.path);
                 mRetreivingSong = true;
+                new MoodbarRetreivalTask().execute(mCurrentSong.path);
             }
 			for(int i = 0; i < 1000; i++) {
 				p[i] = new Paint();
@@ -409,7 +409,9 @@ public class FullPlaybackActivity extends PlaybackActivity
 
         mPrevSong = mCurrentSong;
 		mCurrentSong = song;
-        mRetreivingSong = false;
+        if (mPrevSong != mCurrentSong) {
+            mRetreivingSong = false;
+        }
         mMoodPaints = getMoodBarColors();
 		updateElapsedTime();
 
