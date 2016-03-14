@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 		<activity
 			android:name="FullPlaybackActivity"
+			android:configChanges="orientation|screenSize"
 			android:launchMode="singleTask" />
 		<activity
 			android:name="LibraryActivity"
