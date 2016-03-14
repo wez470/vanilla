@@ -23,9 +23,7 @@
 
 package ch.blinkenlights.android.vanilla;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -38,9 +36,7 @@ import java.io.RandomAccessFile;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Random;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -886,6 +882,11 @@ public class FullPlaybackActivity extends PlaybackActivity
 				byte[] songBytes = new byte[(int)f.length()];
 				f.read(songBytes);
 
+				// Get mood file name
+				String[] pathList = mCurrentSong.path.split("/");
+				String songFileName = pathList[pathList.length - 1];
+				String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+
                 // Get network info.  res/raw/network_config.txt must exist.  The first line contains
                 // The host name or address of the server.  The second line contains the port number. e.g.
                 // 127.0.0.1
@@ -916,10 +917,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 					bytesRead += inFromServer.read(moodBytes, bytesRead, 3000 - bytesRead);
 				}
 
-				// Write mood file
-                String[] pathList = mCurrentSong.path.split("/");
-                String songFileName = pathList[pathList.length - 1];
-                String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+				// We have received the moodbar file.  write it to file for future use.
 				File moodFile = new File(getApplicationContext().getFilesDir(), moodFileName);
 				FileOutputStream fos = new FileOutputStream(moodFile);
 				fos.write(moodBytes);
