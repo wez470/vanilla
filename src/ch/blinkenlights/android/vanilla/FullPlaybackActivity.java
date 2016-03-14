@@ -267,12 +267,11 @@ public class FullPlaybackActivity extends PlaybackActivity
         }
 		Paint[] p = new Paint[1000];
         String[] pathList = mCurrentSong.path.split("/");
-        String songFileName = pathList[pathList.length - 1];
-        String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+		String moodFileName = pathList[pathList.length - 1] + ".mood";
 
 		try {
 			FileInputStream input = getApplicationContext().openFileInput(moodFileName);
-            mRetreivingSong = false;
+			mRetreivingSong = false;
 			for(int i = 0; i < 1000; i++) {
 				int r = input.read();
 				int g = input.read();
@@ -405,10 +404,11 @@ public class FullPlaybackActivity extends PlaybackActivity
 
         mPrevSong = mCurrentSong;
 		mCurrentSong = song;
-        if (mPrevSong != mCurrentSong) {
+        if (mPrevSong != null && mCurrentSong != null && !mPrevSong.path.equals(mCurrentSong.path)) {
             mRetreivingSong = false;
         }
         mMoodPaints = getMoodBarColors();
+		mSeekBar.invalidate();
 		updateElapsedTime();
 
 		mHandler.sendEmptyMessage(MSG_LOAD_FAVOURITE_INFO);
@@ -883,9 +883,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 				f.read(songBytes);
 
 				// Get mood file name
-				String[] pathList = mCurrentSong.path.split("/");
-				String songFileName = pathList[pathList.length - 1];
-				String moodFileName = songFileName.substring(0, songFileName.length() - 3) + "mood";
+				String[] pathList = params[0].split("/");
+				String moodFileName = pathList[pathList.length - 1] + ".mood";
 
                 // Get network info.  res/raw/network_config.txt must exist.  The first line contains
                 // The host name or address of the server.  The second line contains the port number. e.g.
