@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,6 +37,8 @@ import java.io.RandomAccessFile;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -47,7 +50,9 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -122,8 +127,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	 * The currently playing song.
 	 */
 	private Song mCurrentSong;
-    private Song mPrevSong;
-    private boolean mRetreivingSong = false;
+    private Set<String> mSongsRetreivingMoodbars = new HashSet<>();
 
 	private String mGenre;
 	private TextView mGenreView;
@@ -142,7 +146,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	@Override
 	public void onCreate(Bundle icicle)
 	{
-		ThemeHelper.setTheme(this, R.style.Playback);
+        ThemeHelper.setTheme(this, R.style.Playback);
 		super.onCreate(icicle);
 
 		setTitle(R.string.playback_view);
@@ -214,8 +218,9 @@ public class FullPlaybackActivity extends PlaybackActivity
             p[i].setColor(Color.BLACK);
         }
         mMoodPaints = p;
+        restoreSongsRetreivingMoodbars();
 
-		mSeekBar.setBackground(new Drawable() {
+        mSeekBar.setBackground(new Drawable() {
 			@Override
 			public void draw(Canvas canvas) {
 				for (int i = 0; i < mSeekBar.getWidth(); i++)
@@ -261,8 +266,23 @@ public class FullPlaybackActivity extends PlaybackActivity
 		setDuration(0);
 	}
 
+    public void restoreSongsRetreivingMoodbars() {
+        File retrievingSongsFile = new File(getApplicationContext().getFilesDir(), "songsRetrievingMoodbars.txt");
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(retrievingSongsFile));
+            String line;
+            while ((line = br.readLine()) != null) {
+                mSongsRetreivingMoodbars.add(line.trim());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 	Paint[] getMoodBarColors() {
-        if (mCurrentSong == mPrevSong) {
+        if (mCurrentSong == null) {
             return mMoodPaints;
         }
 		Paint[] p = new Paint[1000];
@@ -271,7 +291,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		try {
 			FileInputStream input = getApplicationContext().openFileInput(moodFileName);
-			mRetreivingSong = false;
+			mSongsRetreivingMoodbars.remove(mCurrentSong.path);
 			for(int i = 0; i < 1000; i++) {
 				int r = input.read();
 				int g = input.read();
@@ -281,8 +301,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 			}
 			input.close();
 		} catch (IOException e) {
-            if(mCurrentSong != null && !mRetreivingSong) {
-                mRetreivingSong = true;
+            if(mCurrentSong != null && !mSongsRetreivingMoodbars.contains(mCurrentSong.path)) {
+                mSongsRetreivingMoodbars.add(mCurrentSong.path);
                 new MoodbarRetreivalTask().execute(mCurrentSong.path);
             }
 			for(int i = 0; i < 1000; i++) {
@@ -297,7 +317,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	@Override
 	public void onStart()
 	{
-		super.onStart();
+        super.onStart();
 
 		SharedPreferences settings = PlaybackService.getSettings(this);
 		if (mDisplayMode != Integer.parseInt(settings.getString(PrefKeys.DISPLAY_MODE, PrefDefaults.DISPLAY_MODE))) {
@@ -307,12 +327,13 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mCoverPressAction = Action.getAction(settings, PrefKeys.COVER_PRESS_ACTION, PrefDefaults.COVER_PRESS_ACTION);
 		mCoverLongPressAction = Action.getAction(settings, PrefKeys.COVER_LONGPRESS_ACTION, PrefDefaults.COVER_LONGPRESS_ACTION);
-	}
+        restoreSongsRetreivingMoodbars();
+    }
 
 	@Override
 	public void onResume()
 	{
-		super.onResume();
+        super.onResume();
 		mPaused = false;
 		updateElapsedTime();
     }
@@ -322,6 +343,16 @@ public class FullPlaybackActivity extends PlaybackActivity
 	{
 		super.onPause();
 		mPaused = true;
+        String filename = "songsRetrievingMoodbars.txt";
+        try {
+            FileOutputStream outputStream = openFileOutput(filename, getApplicationContext().MODE_PRIVATE);
+            for (String s : mSongsRetreivingMoodbars) {
+                outputStream.write((s + "\n").getBytes());
+            }
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 	/**
@@ -402,11 +433,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 			updateQueuePosition();
 		}
 
-        mPrevSong = mCurrentSong;
 		mCurrentSong = song;
-        if (mPrevSong != null && mCurrentSong != null && !mPrevSong.path.equals(mCurrentSong.path)) {
-            mRetreivingSong = false;
-        }
         mMoodPaints = getMoodBarColors();
 		mSeekBar.invalidate();
 		updateElapsedTime();
@@ -822,6 +849,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 	@Override
 	public void onStartTrackingTouch(SeekBar seekBar)
 	{
+        mSeekBar.invalidate();
 		mSeekBarTracking = true;
 	}
 
