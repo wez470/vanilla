@@ -37,9 +37,12 @@ import java.io.RandomAccessFile;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.EventObject;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import android.app.usage.UsageEvents;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -53,16 +56,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.text.format.DateUtils;
+import android.util.EventLog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -87,6 +95,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 	private Paint[] mMoodPaints;
 	private SeekBar mSeekBar;
+	private Magnifier mMagnifier;
 	private TableLayout mInfoTable;
 	private TextView mElapsedView;
 	private TextView mDurationView;
@@ -200,6 +209,8 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mTitle = (TextView)findViewById(R.id.title);
 		mAlbum = (TextView)findViewById(R.id.album);
 		mArtist = (TextView)findViewById(R.id.artist);
+		View pView = findViewById(R.id.cover_view);
+		mMagnifier = new Magnifier(220,150,21, mMoodPaints, this, pView);
 
 		mControlsTop = findViewById(R.id.controls_top);
 		mElapsedView = (TextView)findViewById(R.id.elapsed);
@@ -219,6 +230,23 @@ public class FullPlaybackActivity extends PlaybackActivity
         }
         mMoodPaints = p;
         restoreSongsRetreivingMoodbars();
+
+		mSeekBar.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				mMagnifier.setPosition(event.getX(), event.getY());
+				int width = mSeekBar.getWidth() - mSeekBar.getPaddingLeft() - mSeekBar.getPaddingRight();
+				int thumbPosition = mSeekBar.getPaddingLeft() + width * mSeekBar.getProgress() / mSeekBar.getMax();
+				// Create an event for arrow position changed
+				eOnArrowPositionChanged eOnPositionChanged = new eOnArrowPositionChanged(this, thumbPosition, mSeekBar.getWidth(), true);
+				// Fire the event
+				eOnPositionChanged.addListener(mMagnifier);
+				eOnPositionChanged.arrowPositionChanged();
+				return false;
+			}
+
+
+		});
 
         mSeekBar.setBackground(new Drawable() {
 			@Override
@@ -281,7 +309,7 @@ public class FullPlaybackActivity extends PlaybackActivity
         }
     }
 
-	Paint[] getMoodBarColors() {
+	public Paint[] getMoodBarColors() {
         if (mCurrentSong == null) {
             return mMoodPaints;
         }
@@ -846,17 +874,22 @@ public class FullPlaybackActivity extends PlaybackActivity
 		}
 	}
 
+	//Button mMagnifier = null;
+
 	@Override
 	public void onStartTrackingTouch(SeekBar seekBar)
 	{
         mSeekBar.invalidate();
 		mSeekBarTracking = true;
+		mMagnifier.show();
+
 	}
 
 	@Override
 	public void onStopTrackingTouch(SeekBar seekBar)
 	{
 		mSeekBarTracking = false;
+		mMagnifier.hide();
 	}
 
 	@Override
@@ -976,5 +1009,46 @@ public class FullPlaybackActivity extends PlaybackActivity
 			mMoodPaints = getMoodBarColors();
             mSeekBar.invalidate();
 		}
+	}
+
+	// Public, might want to put in own file
+
+	public interface arrowPositionChangedListener
+	{
+		void arrowPositionChanged(int thumbPosX, int seekBarWidth, boolean updateColors);
+	}
+
+	public class eOnArrowPositionChanged extends EventObject
+	{
+
+		private List<arrowPositionChangedListener> listeners = new ArrayList<>();
+		private int mThumbPosX;
+		private int mSeekBarWidth;
+		private boolean mUpdateColors;
+		/**
+		 * Constructs a new instance of this class.
+		 *
+		 * @param source the object which fired the event.
+		 */
+		public eOnArrowPositionChanged(Object source, int thumbPosX, int seekBarWidth, boolean updateColors) {
+			super(source);
+			mThumbPosX = thumbPosX;
+			mSeekBarWidth = seekBarWidth;
+			mUpdateColors = updateColors;
+		}
+
+		public void addListener(arrowPositionChangedListener newListener)
+		{
+			listeners.add(newListener);
+		}
+
+		public void arrowPositionChanged()
+		{
+			for (arrowPositionChangedListener l : listeners)
+			{
+				l.arrowPositionChanged(mThumbPosX, mSeekBarWidth, mUpdateColors);
+			}
+		}
+
 	}
 }

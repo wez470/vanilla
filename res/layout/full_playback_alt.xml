@@ -35,7 +35,8 @@ THE SOFTWARE.
 		android:shrinkColumns="1"
 		android:background="?overlay_background_color"
 		android:paddingLeft="5dip"
-		android:paddingRight="5dip">
+		android:paddingRight="5dip"
+		android:clipChildren="false">
 		<TableRow>
 			<TextView
 				android:text="@string/_title"
@@ -116,30 +117,52 @@ THE SOFTWARE.
 				android:gravity="right" />
 			<TextView android:id="@+id/replaygain" android:textColor="?overlay_foreground_color"/>
 		</TableRow>
-		<LinearLayout android:id="@+id/controls_top">
-			<TextView
-				android:id="@+id/elapsed"
+		<FrameLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:clipChildren="false">
+			<RelativeLayout	android:id="@+id/magnify_holder"
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
+				android:layout_width = "wrap_content"
+				android:layout_marginLeft="18dip"
+				android:layout_marginTop ="-40dp">
+				<ImageButton
+					android:layout_width="100dip"
+					android:layout_height="65dip"
+					android:id="@+id/btn_magnifier"
+					android:foreground="@drawable/seek_arrow"
+					android:foregroundGravity="center"
+					android:visibility="invisible" />
+			</RelativeLayout>
+			<LinearLayout android:id="@+id/controls_top"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
 				android:textSize="10sp"
-				android:layout_gravity="center" />
-			<SeekBar
-				android:id="@+id/seek_bar"
-				android:layout_height="wrap_content"
-				android:layout_width="0px"
-				android:layout_gravity="center"
-				android:layout_weight="1"
-				android:paddingLeft="18dip"
-				android:paddingRight="18dip"
-				android:thumb="@drawable/seek_arrow"
-				android:progressDrawable="@android:color/transparent" />
-			<TextView
-				android:id="@+id/duration"
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:textSize="10sp"
-				android:layout_gravity="center" />
-		</LinearLayout>
+				android:layout_gravity="center">
+				<TextView
+					android:id="@+id/elapsed"
+					android:layout_height="wrap_content"
+					android:layout_width="wrap_content"
+					android:textSize="10sp"
+					android:layout_gravity="center" />
+				<SeekBar
+					android:id="@+id/seek_bar"
+					android:layout_height="wrap_content"
+					android:layout_width="0px"
+					android:layout_gravity="center"
+					android:layout_weight="1"
+					android:paddingLeft="18dip"
+					android:paddingRight="18dip"
+					android:thumb="@drawable/seek_arrow"
+					android:progressDrawable="@android:color/transparent" />
+				<TextView
+					android:id="@+id/duration"
+					android:layout_height="wrap_content"
+					android:layout_width="wrap_content"
+					android:textSize="10sp"
+					android:layout_gravity="center" />
+			</LinearLayout>
+		</FrameLayout>
 	</TableLayout>
 	<LinearLayout
 		android:id="@+id/controls_bottom"
