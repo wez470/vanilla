@@ -209,8 +209,7 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mTitle = (TextView)findViewById(R.id.title);
 		mAlbum = (TextView)findViewById(R.id.album);
 		mArtist = (TextView)findViewById(R.id.artist);
-		View pView = findViewById(R.id.cover_view);
-		mMagnifier = new Magnifier(220,150,21, mMoodPaints, this, pView);
+		mMagnifier = new Magnifier(220,150,21, mMoodPaints, this);
 
 		mControlsTop = findViewById(R.id.controls_top);
 		mElapsedView = (TextView)findViewById(R.id.elapsed);
@@ -234,9 +233,11 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mSeekBar.setOnTouchListener(new View.OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				mMagnifier.setPosition(event.getX(), event.getY());
 				int width = mSeekBar.getWidth() - mSeekBar.getPaddingLeft() - mSeekBar.getPaddingRight();
 				int thumbPosition = mSeekBar.getPaddingLeft() + width * mSeekBar.getProgress() / mSeekBar.getMax();
+				if (event.getX() <= 0 || event.getX() >= width) return false;
+				mMagnifier.setPosition(event.getX(), event.getY());
+
 				// Create an event for arrow position changed
 				eOnArrowPositionChanged eOnPositionChanged = new eOnArrowPositionChanged(this, thumbPosition, mSeekBar.getWidth(), true);
 				// Fire the event

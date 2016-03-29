@@ -26,12 +26,11 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
     private RelativeLayout.LayoutParams layoutParams;
 
     //@SuppressWarnings("all")
-    public Magnifier(float width, float height, int numColorsShown, Paint[] moodPaints, FullPlaybackActivity parentActivity, View parentView)
+    public Magnifier(float width, float height, int numColorsShown, Paint[] moodPaints, FullPlaybackActivity parentActivity)
     {
         mParentActivity = parentActivity;
         mMoodPaints = moodPaints;
         mNumColorsShown = numColorsShown;
-       // mParentView = parentView;
 
         if (mMagnifier == null) {
             ImageButton b = (ImageButton) mParentActivity.findViewById(R.id.btn_magnifier);
@@ -48,7 +47,7 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
 
 
             mMagnifier = b;
-            mMagnifier.setVisibility(View.VISIBLE);
+            //mMagnifier.setVisibility(View.VISIBLE);
         } else {
             mMagnifier.setVisibility(View.VISIBLE);
         }
@@ -72,8 +71,15 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
         //System.out.println("THE CENTER" + centerColorIndex + " HALF = " + mNumColorsShown/2);
         for (int i = centerColorIndex - (mNumColorsShown / 2); i <= centerColorIndex + (mNumColorsShown / 2); i++)
         {
-            magnifierPaints[paintCounter] = mMoodPaints[i];
-            //System.out.println("Setting paint " + i + " to " + mMoodPaints[i]);
+            if (i <= 0 || i >= 1000)
+            {
+                magnifierPaints[paintCounter] = new Paint();
+                magnifierPaints[paintCounter].setColor(Color.BLACK);
+            }
+            else {
+                magnifierPaints[paintCounter] = mMoodPaints[i];
+                //System.out.println("Setting paint " + i + " to " + mMoodPaints[i]);
+            }
             paintCounter++;
         }
         mMagnifier.setBackground(new Drawable() {
@@ -82,6 +88,7 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
                 int paintCounter = 0;
                 for (float i = 0; i < mMagnifier.getWidth(); i = i + (mMagnifier.getWidth() / mNumColorsShown))
                 {
+                    //this
                     if (paintCounter == mNumColorsShown) return;
                     //System.out.println("i = " + i);
                     //System.out.println("width = " + mMagnifier.getWidth());
@@ -119,15 +126,14 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
 
         mMagnifier.setLayoutParams(layoutParams);
         SeekBar root = (SeekBar) mParentActivity.findViewById(R.id.seek_bar);
-        root.getParent().bringChildToFront(magContainer);
-        root.getParent().bringChildToFront(mMagnifier);
+        //root.getParent().bringChildToFront(magContainer);
+        //root.getParent().bringChildToFront(mMagnifier);
 
     }
 
 
     @Override
     public void arrowPositionChanged(int thumbPosX, int seekBarWidth, boolean updateColors) {
-        if (thumbPosX == 0) return;
         // Get the color closest to arrow to use as center of magnifier
         int closestColor = thumbPosX * 1000 / seekBarWidth;
         //System.out.println("CLOSEST COL = " + closestColor);
