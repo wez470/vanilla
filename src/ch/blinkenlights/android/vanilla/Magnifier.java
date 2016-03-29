@@ -116,7 +116,7 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
 
     public void setPosition(float x, float y)
     {
-        layoutParams.leftMargin = (int) x - 50;
+        layoutParams.leftMargin = (int) x - 60;
         layoutParams.topMargin = (int) -40;
         //System.out.println("setting to pos " + x + " " + y);
         //System.out.println("setting to pos " + layoutParams.leftMargin + " " + layoutParams.topMargin);

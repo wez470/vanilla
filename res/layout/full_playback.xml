@@ -36,7 +36,8 @@ THE SOFTWARE.
 			android:id="@+id/btn_magnifier"
 			android:foreground="@drawable/seek_arrow"
 			android:foregroundGravity="center"
-			android:visibility="invisible" />
+			android:visibility="invisible"
+			android:src="@drawable/seek_arrow" />
 	</RelativeLayout>
 	<LinearLayout
 		android:id="@+id/controls_top"

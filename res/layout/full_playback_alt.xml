@@ -132,7 +132,10 @@ THE SOFTWARE.
 					android:id="@+id/btn_magnifier"
 					android:foreground="@drawable/seek_arrow"
 					android:foregroundGravity="center"
-					android:visibility="invisible" />
+					android:visibility="invisible"
+					android:src="@drawable/seek_arrow">
+
+				</ImageButton>
 			</RelativeLayout>
 			<LinearLayout android:id="@+id/controls_top"
 				android:layout_height="wrap_content"
