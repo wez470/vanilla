@@ -45,4 +45,7 @@ THE SOFTWARE.
 	<header
 		android:fragment="ch.blinkenlights.android.vanilla.PreferencesActivity$AboutFragment"
 		android:title="@string/about" />
+	<header
+		android:fragment="ch.blinkenlights.android.vanilla.PreferencesActivity$MagnifierFragment"
+		android:title="Magnifier" />
 </preference-headers>

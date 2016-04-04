@@ -209,7 +209,9 @@ public class FullPlaybackActivity extends PlaybackActivity
 		mTitle = (TextView)findViewById(R.id.title);
 		mAlbum = (TextView)findViewById(R.id.album);
 		mArtist = (TextView)findViewById(R.id.artist);
-		mMagnifier = new Magnifier(220,150,21, mMoodPaints, this);
+		int magWidth = settings.getInt(PrefKeys.MAGNIFIER_WIDTH, PrefDefaults.MAGNIFIER_WIDTH);
+		int magNumColors = settings.getInt(PrefKeys.MAGNIFIER_NUM_COLORS, PrefDefaults.MAGNIFIER_NUM_COLORS);
+		mMagnifier = new Magnifier(magWidth,150,magNumColors, mMoodPaints, this);
 
 		mControlsTop = findViewById(R.id.controls_top);
 		mElapsedView = (TextView)findViewById(R.id.elapsed);
@@ -356,6 +358,9 @@ public class FullPlaybackActivity extends PlaybackActivity
 
 		mCoverPressAction = Action.getAction(settings, PrefKeys.COVER_PRESS_ACTION, PrefDefaults.COVER_PRESS_ACTION);
 		mCoverLongPressAction = Action.getAction(settings, PrefKeys.COVER_LONGPRESS_ACTION, PrefDefaults.COVER_LONGPRESS_ACTION);
+		int magWidth = settings.getInt(PrefKeys.MAGNIFIER_WIDTH, PrefDefaults.MAGNIFIER_WIDTH);
+		int magNumColors = settings.getInt(PrefKeys.MAGNIFIER_NUM_COLORS, PrefDefaults.MAGNIFIER_NUM_COLORS);
+		mMagnifier = new Magnifier(magWidth,150,magNumColors, mMoodPaints, this);
         restoreSongsRetreivingMoodbars();
     }
 

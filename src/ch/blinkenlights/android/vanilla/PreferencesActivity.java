@@ -236,6 +236,15 @@ public class PreferencesActivity extends PreferenceActivity {
 		}
 	}
 
+	public static class MagnifierFragment extends PreferenceFragment {
+		@Override
+		public void onCreate(Bundle savedInstanceState)
+		{
+			super.onCreate(savedInstanceState);
+			addPreferencesFromResource(R.xml.preference_magnifier);
+		}
+	}
+
 	public static class HeadsetLaunchFragment extends PreferenceFragment {
 		@Override
 		public void onCreate(Bundle savedInstanceState)

@@ -432,6 +432,14 @@ public final class PlaybackService extends Service
 	 * Reference to Playcounts helper class
 	 */
 	private PlayCountsHelper mPlayCounts;
+	/**
+	 * Width in pixels of the magnifier
+	 */
+	private int mMagnifierWidth;
+	/**
+	 * Number of colors to place in the magnifier
+	 */
+	private int mMagnifierNumColors;
 
 	@Override
 	public void onCreate()
@@ -893,6 +901,14 @@ public final class PlaybackService extends Service
 			ArrayList<PlaybackActivity> list = sActivities;
 			for (int i = list.size(); --i != -1; )
 				list.get(i).recreate();
+		}
+		else if (PrefKeys.MAGNIFIER_WIDTH.equals(key))
+		{
+			mMagnifierWidth = settings.getInt(PrefKeys.MAGNIFIER_WIDTH, PrefDefaults.MAGNIFIER_WIDTH);
+		}
+		else if (PrefKeys.MAGNIFIER_NUM_COLORS.equals(key))
+		{
+			mMagnifierNumColors = settings.getInt(PrefKeys.MAGNIFIER_NUM_COLORS, PrefDefaults.MAGNIFIER_NUM_COLORS);
 		}
 		/* Tell androids cloud-backup manager that we just changed our preferences */
 		(new BackupManager(this)).dataChanged();

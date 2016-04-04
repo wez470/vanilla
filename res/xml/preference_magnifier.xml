@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:vanilla="http://schemas.android.com/apk/res/ch.blinkenlights.android.vanilla"
+	android:persistent="true">
+	<ch.blinkenlights.android.vanilla.SeekBarPreference
+		android:key="magnifier_width"
+		android:dialogLayout="@layout/seekbar_pref"
+		android:title="Magnifier Width"
+		android:defaultValue="220"
+		vanilla:sbpSummaryText="Width in pixels"
+		vanilla:sbpSummaryFormat="%s %.0f"
+		vanilla:sbpMaxValue="600" />
+	<ch.blinkenlights.android.vanilla.SeekBarPreference
+		android:key="magnifier_num_colors"
+		android:dialogLayout="@layout/seekbar_pref"
+		android:title="Number of Colors in Magnifier"
+		android:defaultValue="21"
+		vanilla:sbpSummaryText="Number of Colors"
+		vanilla:sbpSummaryFormat="%s %.0f"
+		vanilla:sbpMaxValue="200" />
+</PreferenceScreen>

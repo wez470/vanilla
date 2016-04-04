@@ -69,4 +69,7 @@ public class PrefDefaults {
 	public static final int     VOLUME_DURING_DUCKING = 50;
 	public static final int     AUTOPLAYLIST_PLAYCOUNTS = 0;
 	public static final boolean IGNORE_AUDIOFOCUS_LOSS = false;
+	public static final int 	MAGNIFIER_WIDTH = 220;
+	public static final int 	MAGNIFIER_NUM_COLORS = 21;
+
 }
