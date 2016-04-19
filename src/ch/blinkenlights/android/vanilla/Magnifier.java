@@ -68,9 +68,18 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
         final Paint[] magnifierPaints = new Paint[mNumColorsShown];
         int paintCounter = 0;
         mMoodPaints = mParentActivity.getMoodBarColors();
+        if (mNumColorsShown == 0)
+        {
+            mMagnifier.setBackgroundColor(Color.BLACK);
+            return;
+        }
         //System.out.println("THE CENTER" + centerColorIndex + " HALF = " + mNumColorsShown/2);
         for (int i = centerColorIndex - (mNumColorsShown / 2); i <= centerColorIndex + (mNumColorsShown / 2); i++)
         {
+            if (paintCounter >= magnifierPaints.length)
+            {
+                break;
+            }
             if (i <= 0 || i >= 1000)
             {
                 magnifierPaints[paintCounter] = new Paint();
