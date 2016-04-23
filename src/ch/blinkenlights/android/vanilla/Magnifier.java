@@ -25,7 +25,6 @@ public class Magnifier implements FullPlaybackActivity.arrowPositionChangedListe
     // The parameters for the layout needed to display the magnifier (contains a button in a relative layout)
     private RelativeLayout.LayoutParams layoutParams;
 
-    //@SuppressWarnings("all")
     public Magnifier(float width, float height, int numColorsShown, Paint[] moodPaints, FullPlaybackActivity parentActivity)
     {
         mParentActivity = parentActivity;
